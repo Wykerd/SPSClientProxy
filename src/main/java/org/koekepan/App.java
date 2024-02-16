@@ -16,6 +16,7 @@ import com.github.steveice10.packetlib.event.session.PacketSentEvent;
 import com.github.steveice10.packetlib.event.session.SessionAdapter;
 import com.github.steveice10.packetlib.packet.Packet;
 import com.github.steveice10.packetlib.tcp.TcpSessionFactory;
+import org.koekepan.VAST.SPSPacket;
 import org.koekepan.VAST.VastConnection;
 
 public class App 
@@ -28,6 +29,8 @@ public class App
     // This is the VAST_COM ip/port that the proxy will connect to (aka the sps client)
     static String vastHost = "localhost";
     static int vastPort = 3456;
+
+    private static VastConnection vastConnection;
 
     public App() {
         // 1. Create a server
@@ -62,7 +65,10 @@ public class App
             public void sessionAdded(SessionAddedEvent event) {
 //                event.getSession().addListener(new ClientSessionListener());
                 System.out.println("Session added: " + event.getSession().getHost() + ":" + event.getSession().getPort());
-                event.getSession().addListener(new ClientSessionListener());
+
+                Session session = event.getSession();
+                session.addListener(new ClientSessionListener());
+
             }
 
             @Override
@@ -71,9 +77,12 @@ public class App
             }
         });
 
+        // TODO: Should wait for the server to be bound before connecting to VAST_COM
         // 2. Create VAST_COM connection
-        VastConnection vastConnection = new VastConnection(vastHost, vastPort);
+        vastConnection = new VastConnection(vastHost, vastPort);
         vastConnection.connect();
+
+        // 3. Create a client/Start the login process
 
 
     }
@@ -147,6 +156,9 @@ public class App
 ////              Add a listener to handle packets from the Minecraft server
 //                serverSession.addListener(new ServerSessionListener());
 //                serverSession.connect(); // This initiates the connection
+
+                SPSPacket spsPacket = new SPSPacket(event.getPacket(), username, "serverBound");
+                vastConnection.publish(spsPacket);
 
             }
 
