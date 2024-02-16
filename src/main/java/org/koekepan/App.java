@@ -16,6 +16,7 @@ import com.github.steveice10.packetlib.event.session.PacketSentEvent;
 import com.github.steveice10.packetlib.event.session.SessionAdapter;
 import com.github.steveice10.packetlib.packet.Packet;
 import com.github.steveice10.packetlib.tcp.TcpSessionFactory;
+import org.koekepan.VAST.VastConnection;
 
 public class App 
 {
@@ -69,6 +70,11 @@ public class App
                 System.out.println("Session removed: " + sessionRemovedEvent.getSession().getHost() + ":" + sessionRemovedEvent.getSession().getPort());
             }
         });
+
+        // 2. Create VAST_COM connection
+        VastConnection vastConnection = new VastConnection(vastHost, vastPort);
+        vastConnection.connect();
+
 
     }
 
