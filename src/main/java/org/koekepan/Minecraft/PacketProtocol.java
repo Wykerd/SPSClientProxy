@@ -1,6 +1,6 @@
 package org.koekepan.Minecraft;
 
-//import org.koekepan.herobrineproxy.packet.EstablishConnectionPacket;
+import org.koekepan.VAST.CustomPackets.EstablishConnectionPacket;
 
 import com.github.steveice10.mc.protocol.MinecraftConstants;
 import com.github.steveice10.mc.protocol.MinecraftProtocol;
@@ -265,7 +265,7 @@ public class PacketProtocol extends MinecraftProtocol {
         this.register(0x73, StatusQueryPacket.class);
         this.register(0x74, StatusPingPacket.class);
 
-//        this.register(0x75, EstablishConnectionPacket.class);
+        this.register(0x75, EstablishConnectionPacket.class);
     }
 
 }

@@ -1,4 +1,4 @@
-package org.koekepan.VAST;
+package org.koekepan.VAST.Packet;
 
 import com.github.steveice10.packetlib.io.buffer.ByteBufferNetInput;
 import com.github.steveice10.packetlib.io.buffer.ByteBufferNetOutput;

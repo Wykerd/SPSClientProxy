@@ -1,9 +1,5 @@
-package org.koekepan.VAST;
+package org.koekepan.VAST.Connection;
 
-import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerMovementPacket;
-import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerPositionPacket;
-import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerPositionRotationPacket;
-import com.github.steveice10.packetlib.packet.Packet;
 import com.google.gson.Gson;
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -11,16 +7,15 @@ import io.socket.emitter.Emitter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import org.json.JSONException;
 import org.koekepan.Minecraft.ChunkPosition;
+import org.koekepan.VAST.Packet.SPSPacket;
 
 import static java.lang.Thread.sleep;
-import static org.koekepan.VAST.PacketUtil.*;
+import static org.koekepan.VAST.Packet.PacketUtil.*;
 
 public class VastConnection {
 
@@ -91,7 +86,7 @@ public class VastConnection {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        this.subscribe(100, 100, 10000);
+        this.subscribe(100, 100, 1000);
 
         System.out.println("VAST Client initialised");
     }
@@ -243,7 +238,7 @@ public class VastConnection {
 
 //        temp_pubcounter += 1;
 //        Logger.log(this, Logger.Level.DEBUG, new String[]{"counter", "clientPub"},"Amount of packets sent: " + temp_pubcounter + ": " + packet.packet.getClass().getSimpleName());
-        socket.emit("publish", 7, packet.username, 100, 100, 10000, json, packet.channel); // TODO: AOI - This should not be hard coded, this is also wack
+        socket.emit("publish", 7, packet.username, 100, 100, 1000, json, packet.channel); // TODO: AOI - This should not be hard coded, this is also wack
     }
 
 

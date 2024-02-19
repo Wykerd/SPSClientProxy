@@ -1,8 +1,5 @@
 package org.koekepan;
 
-import com.github.steveice10.mc.protocol.ClientListener;
-import com.github.steveice10.mc.protocol.packet.login.client.LoginStartPacket;
-import com.github.steveice10.packetlib.Client;
 import com.github.steveice10.packetlib.event.server.ServerListener;
 import com.github.steveice10.mc.protocol.MinecraftConstants;
 import com.github.steveice10.mc.protocol.MinecraftProtocol;
@@ -10,14 +7,11 @@ import com.github.steveice10.mc.protocol.ServerLoginHandler;
 import com.github.steveice10.packetlib.Server;
 import com.github.steveice10.packetlib.Session;
 import com.github.steveice10.packetlib.event.server.*;
-import com.github.steveice10.packetlib.event.session.ConnectedEvent;
-import com.github.steveice10.packetlib.event.session.PacketReceivedEvent;
-import com.github.steveice10.packetlib.event.session.PacketSentEvent;
-import com.github.steveice10.packetlib.event.session.SessionAdapter;
-import com.github.steveice10.packetlib.packet.Packet;
 import com.github.steveice10.packetlib.tcp.TcpSessionFactory;
-import org.koekepan.VAST.SPSPacket;
-import org.koekepan.VAST.VastConnection;
+import org.koekepan.VAST.Connection.ClientConnectedInstance;
+import org.koekepan.VAST.Connection.VastConnection;
+
+import java.util.HashMap;
 
 public class App 
 {
@@ -32,7 +26,13 @@ public class App
 
     private static VastConnection vastConnection;
 
+//    private static final ArrayList<ClientConnectedInstance> clientInstances = new ArrayList<ClientConnectedInstance>();
+    public static HashMap<Session, ClientConnectedInstance> clientInstances = new HashMap<Session, ClientConnectedInstance>();
+
     public App() {
+        // 0. Initialize the packet sender
+//        PacketSender packetSender = new PacketSender();
+
         // 1. Create a server
         Server server = new Server(host, port, MinecraftProtocol.class, new TcpSessionFactory());
         server.setGlobalFlag("server-info", "SPSClientProxy");
@@ -67,7 +67,11 @@ public class App
                 System.out.println("Session added: " + event.getSession().getHost() + ":" + event.getSession().getPort());
 
                 Session session = event.getSession();
-                session.addListener(new ClientSessionListener());
+
+//                clientInstances.add(new ClientConnectedInstance(session, vastHost, vastPort));
+                clientInstances.put(session, new ClientConnectedInstance(session, vastHost, vastPort));
+
+//                session.addListener(new ClientSessionListener());
 
             }
 
@@ -79,8 +83,8 @@ public class App
 
         // TODO: Should wait for the server to be bound before connecting to VAST_COM
         // 2. Create VAST_COM connection
-        vastConnection = new VastConnection(vastHost, vastPort);
-        vastConnection.connect();
+//        vastConnection = new VastConnection(vastHost, vastPort);
+//        vastConnection.connect();
 
         // 3. Create a client/Start the login process
 
@@ -127,53 +131,6 @@ public class App
 
         System.out.println("> [Server Host (String)] [Server Port (int)] and default [Proxy Host:Proxy Port] = [127.0.0.1:25570] or ");
         System.out.println("> [Server Host (String)] [Server Port (int)] [Proxy Host (String)] [Proxy Port (int)]");
-    }
-
-    public static class ClientSessionListener extends SessionAdapter { // This is the client listener (Listens to the packets sent/received from client)
-        /*
-        The ClientSessionListener should handle packets from the client, forwarding them to the actual Minecraft server.
-        It should also handle the login process if necessary.
-         */
-        private Session serverSession; // The session to the actual Minecraft server (VAST_COM)
-        @Override
-        public void packetReceived(PacketReceivedEvent event) { // Called when a packet is received from the client
-            System.out.println("Received packet (from client): " + event.getPacket().getClass().getSimpleName());
-
-            if (event.getPacket() instanceof LoginStartPacket) {
-                LoginStartPacket startPacket = event.getPacket();
-                // Extract the username from the login start packet
-                String username = startPacket.getUsername();
-
-                System.out.println("Received login packet from " + username);
-
-////              Use the username to connect to the actual Minecraft server
-//                MinecraftProtocol protocol = new MinecraftProtocol(username);
-//
-////                serverSession = new Client("server.host.com", 25565, protocol, new TcpSessionFactory());
-//                Client client = new Client("server.host.com", 25565, protocol, new TcpSessionFactory());
-//                serverSession = client.getSession();
-//
-////              Add a listener to handle packets from the Minecraft server
-//                serverSession.addListener(new ServerSessionListener());
-//                serverSession.connect(); // This initiates the connection
-
-                SPSPacket spsPacket = new SPSPacket(event.getPacket(), username, "serverBound");
-                vastConnection.publish(spsPacket);
-
-            }
-
-//            // Forward packets to the Minecraft server (VASt_COM)
-//            if (serverSession != null) {
-//                serverSession.send(event.getPacket());
-//            }
-        }
-
-        @Override
-        public void connected(ConnectedEvent event) {
-            // Called when client is connected to the actual Minecraft server
-            System.out.println("Connected to server");
-        }
-
     }
 
 //    public static class ServerSessionListener extends SessionAdapter { // This is the server listener (Listens to the packets sent/received from server/VAST_COM)
