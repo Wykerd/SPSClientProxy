@@ -1,4 +1,4 @@
-package org.koekepan.herobrineproxy.packet.behaviours.login;
+package org.koekepan.Minecraft.behaviours.login;
 
 import com.github.steveice10.mc.protocol.packet.login.server.LoginSuccessPacket;
 import com.github.steveice10.packetlib.packet.Packet;

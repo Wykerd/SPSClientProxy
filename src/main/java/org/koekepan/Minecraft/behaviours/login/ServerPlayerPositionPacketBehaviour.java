@@ -1,4 +1,4 @@
-package org.koekepan.herobrineproxy.packet.behaviours.login;
+package org.koekepan.Minecraft.behaviours.login;
 
 import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerPositionRotationPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.server.entity.player.ServerPlayerPositionRotationPacket;

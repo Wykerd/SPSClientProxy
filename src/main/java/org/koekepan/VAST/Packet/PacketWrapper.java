@@ -79,4 +79,11 @@ public class PacketWrapper {
         return map.get(queueNumber);
     }
 
+    public static void setProcessed(Packet packet, boolean isProcessed) {
+        PacketWrapper packetWrapper = packetWrapperMap.get(packet);
+        if (packetWrapper != null) {
+            packetWrapper.isProcessed = isProcessed;
+        }
+    }
+
 }

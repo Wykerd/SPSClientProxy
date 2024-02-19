@@ -7,14 +7,19 @@ import com.github.steveice10.packetlib.event.session.PacketReceivedEvent;
 import com.github.steveice10.packetlib.event.session.SessionAdapter;
 import org.koekepan.App;
 import org.koekepan.VAST.CustomPackets.EstablishConnectionPacket;
+import org.koekepan.VAST.Packet.PacketHandler;
 
 import java.util.HashMap;
 
 public class ClientConnectedInstance {
-    private VastConnection vastConnection;
-    private PacketSender packetSender;
+    private VastConnection vastConnection; // The connection to the VAST_COM server, used to publish packets to the vast network
+    private PacketSender packetSender; // The packet sender, used to send packets to queue packets that are destined for the VAST_COM server and the client
+    private PacketHandler packetHandler; // The packet handler, used to run packet behaviours that are received from the VAST_COM server and the client
 
     private Session session;
+
+    private Boolean joined = false;
+    private int entityID = -1; // The entity ID of the player, if the player has joined the game (otherwise -1)
 
     public static HashMap<PacketSender, ClientConnectedInstance> clientInstances_PacketSenders = new HashMap<PacketSender, ClientConnectedInstance>();
 
@@ -23,6 +28,7 @@ public class ClientConnectedInstance {
         this.session.addListener(new ClientSessionListener());
         this.vastConnection = new VastConnection(VastHost, VastPort);
         this.packetSender = new PacketSender();
+        this.packetHandler = new PacketHandler();
 
         this.vastConnection.connect();
     }
@@ -80,6 +86,30 @@ public class ClientConnectedInstance {
 
     public VastConnection getVastConnection() {
         return vastConnection;
+    }
+
+    public PacketSender getPacketSender() {
+        return packetSender;
+    }
+
+    public Session getSession() {
+        return session;
+    }
+
+    public Boolean getJoined() {
+        return joined;
+    }
+
+    public void setJoined(Boolean joined) {
+        this.joined = joined;
+    }
+
+    public int getEntityID() {
+        return entityID;
+    }
+
+    public void setEntityID(int entityID) {
+        this.entityID = entityID;
     }
 
 }
