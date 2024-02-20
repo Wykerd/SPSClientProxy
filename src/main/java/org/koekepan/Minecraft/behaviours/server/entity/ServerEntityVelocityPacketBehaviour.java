@@ -1,24 +1,20 @@
-package org.koekepan.herobrineproxy.packet.behaviours.server.entity;
+package org.koekepan.Minecraft.behaviours.server.entity;
 
 import com.github.steveice10.mc.protocol.packet.ingame.server.entity.ServerEntityVelocityPacket;
 import com.github.steveice10.packetlib.packet.Packet;
-import org.koekepan.herobrineproxy.Logger;
-import org.koekepan.herobrineproxy.behaviour.Behaviour;
-import org.koekepan.herobrineproxy.packet.PacketSender;
-import org.koekepan.herobrineproxy.session.ClientProxySession;
-import org.koekepan.herobrineproxy.session.IProxySessionNew;
-import org.koekepan.herobrineproxy.sps.SPSConnection;
-import org.koekepan.herobrineproxy.sps.SPSPacket;
+import org.koekepan.VAST.Connection.ClientConnectedInstance;
+import org.koekepan.VAST.Packet.Behaviour;
+import org.koekepan.VAST.Packet.PacketWrapper;
 
 public class ServerEntityVelocityPacketBehaviour implements Behaviour<Packet> {
-    private IProxySessionNew proxySession;
+    private ClientConnectedInstance clientInstance;
 //    private IServerSession serverSession;
 
     private ServerEntityVelocityPacketBehaviour() {
     }
 
-    public ServerEntityVelocityPacketBehaviour(IProxySessionNew proxySession) {
-        this.proxySession = proxySession;
+    public ServerEntityVelocityPacketBehaviour(ClientConnectedInstance clientInstance) {
+        this.clientInstance = clientInstance;
 //        this.serverSession = serverSession;
     }
 
@@ -27,19 +23,25 @@ public class ServerEntityVelocityPacketBehaviour implements Behaviour<Packet> {
         ServerEntityVelocityPacket serverEntityVelocityPacket = (ServerEntityVelocityPacket) packet;
 
 //        ConsoleIO.println("Block changed at position: " + blockRecord.getPosition().getX() + ", " + blockRecord.getPosition().getY() + ", " + blockRecord.getPosition().getZ());        
-        if (ClientProxySession.getEntityID() != serverEntityVelocityPacket.getEntityId()){
-            proxySession.sendPacketToClient(packet);
-        } else if (SPSConnection.playerSpecificPacketMap.containsKey(packet)){
+        if (clientInstance.getEntityID() != serverEntityVelocityPacket.getEntityId()){
+//            clientInstance.sendPacketToClient(packet);
+            PacketWrapper.setProcessed(packet, true);
+        } else {
+            PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
+            if (packetWrapper.PlayerSpecific() != null){
 
-            if (SPSConnection.playerSpecificPacketMap.get(packet).channel.equals(proxySession.getUsername())){
-                proxySession.sendPacketToClient(packet);
-            } else {
-                SPSConnection.playerSpecificPacketMap.remove(packet);
-                PacketSender.removePacketFromQueue(packet);
-                Logger.log(this, Logger.Level.WARN, new String[]{"Entity", "entityVelocity", "behaviour"}, "Entity velocity not forwarded to client.");
+                if (packetWrapper.PlayerSpecific().equals(clientInstance.getUsername())){
+//                clientInstance.sendPacketToClient(packet);
+                    PacketWrapper.setProcessed(packet, true);
+                } else {
+//                SPSConnection.playerSpecificPacketMap.remove(packet);
+//                PacketSender.removePacketFromQueue(packet);
+//                Logger.log(this, Logger.Level.WARN, new String[]{"Entity", "entityVelocity", "behaviour"}, "Entity velocity not forwarded to client.");
+                    clientInstance.getPacketSender().removePacket(packet);
+                    return;
+                }
                 return;
             }
-            return;
         }
     }
 }

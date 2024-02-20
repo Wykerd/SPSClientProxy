@@ -1,21 +1,22 @@
-package org.koekepan.herobrineproxy.packet.behaviours.server.entity;
+package org.koekepan.Minecraft.behaviours.server.entity;
 
 import com.github.steveice10.mc.protocol.packet.ingame.server.entity.spawn.ServerSpawnPlayerPacket;
+import com.github.steveice10.packetlib.Client;
 import com.github.steveice10.packetlib.packet.Packet;
-import org.koekepan.herobrineproxy.behaviour.Behaviour;
-import org.koekepan.herobrineproxy.session.ClientProxySession;
-import org.koekepan.herobrineproxy.session.IProxySessionNew;
-import org.koekepan.herobrineproxy.sps.SPSConnection;
+import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
+import org.koekepan.VAST.Connection.ClientConnectedInstance;
+import org.koekepan.VAST.Packet.Behaviour;
+import org.koekepan.VAST.Packet.PacketWrapper;
 
 public class ServerSpawnPlayerPacketBehaviour implements Behaviour<Packet> {
-    private IProxySessionNew proxySession;
+    private ClientConnectedInstance clientInstance;
 //    private IServerSession serverSession;
 
     private ServerSpawnPlayerPacketBehaviour() {
     }
 
-    public ServerSpawnPlayerPacketBehaviour(IProxySessionNew proxySession) {
-        this.proxySession = proxySession;
+    public ServerSpawnPlayerPacketBehaviour(ClientConnectedInstance clientInstance) {
+        this.clientInstance = clientInstance;
 //        this.serverSession = serverSession;
     }
 
@@ -23,16 +24,22 @@ public class ServerSpawnPlayerPacketBehaviour implements Behaviour<Packet> {
     public void process(Packet packet) {
         ServerSpawnPlayerPacket serverSpawnPlayerPacketBehaviour = (ServerSpawnPlayerPacket) packet;
 
-        if (serverSpawnPlayerPacketBehaviour.getEntityId() != ClientProxySession.getEntityID()) {
-            proxySession.sendPacketToClient(packet);
-        } else if (SPSConnection.playerSpecificPacketMap.containsKey(packet)) {
-            if (SPSConnection.playerSpecificPacketMap.get(packet).channel.equals(proxySession.getUsername())) {
-                proxySession.sendPacketToClient(packet);
-            } else {
-                SPSConnection.playerSpecificPacketMap.remove(packet);
+        if (serverSpawnPlayerPacketBehaviour.getEntityId() != clientInstance.getEntityID()) { // Spawn other players
+//            clientInstance.sendPacketToClient(packet);
+            PacketWrapper.setProcessed(packet, true);
+        } else {
+            PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
+            if (packetWrapper.PlayerSpecific() != null) {
+                if (packetWrapper.PlayerSpecific().equals(clientInstance.getUsername())) {
+                    PacketWrapper.setProcessed(packet, true);
+//                    clientInstance.sendPacketToClient(packet);
+                } else {
+//                    SPSConnection.playerSpecificPacketMap.remove(packet);
+                    clientInstance.getPacketSender().removePacket(packet);
+                    return;
+                }
                 return;
             }
-            return;
         }
     }
 }

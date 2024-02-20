@@ -12,6 +12,7 @@ public class PacketWrapper {
     private Packet packet;
     public boolean isProcessed = false;
     public boolean clientBound = false;
+    private String PlayerSpecific = null;
 
     public PacketWrapper(SPSPacket spsPacket) {
 
@@ -46,6 +47,14 @@ public class PacketWrapper {
 
     public void setSPSPacket(SPSPacket newSpsPacket) {
         this.spsPacket = newSpsPacket;
+    }
+
+    public void setPlayerSpecific(String PlayerSpecific) {
+        this.PlayerSpecific = PlayerSpecific;
+    }
+
+    public String PlayerSpecific() {
+        return PlayerSpecific;
     }
 
     public static int get_QueueNumber(Packet packet) {
@@ -85,5 +94,10 @@ public class PacketWrapper {
             packetWrapper.isProcessed = isProcessed;
         }
     }
+
+    public static void removePacketWrapper(Packet packet) {
+        packetWrapperMap.remove(packet);
+    }
+
 
 }

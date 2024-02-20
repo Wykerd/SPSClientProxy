@@ -28,9 +28,13 @@ public class ClientConnectedInstance {
         this.session.addListener(new ClientSessionListener());
         this.vastConnection = new VastConnection(VastHost, VastPort);
         this.packetSender = new PacketSender();
-        this.packetHandler = new PacketHandler();
+        this.packetHandler = new PacketHandler(this);
 
         this.vastConnection.connect();
+    }
+
+    public String getUsername() {
+        return session.getFlag("username");
     }
 
     private static class ClientSessionListener extends SessionAdapter { // This is the client listener (Listens to the packets sent/received from client)

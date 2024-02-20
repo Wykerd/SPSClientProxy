@@ -1,7 +1,8 @@
 package org.koekepan.VAST.Packet;
 
 import com.github.steveice10.packetlib.packet.Packet;
-import org.koekepan.Minecraft.behaviours.ServerSessionPacketBehaviours;
+import org.koekepan.Minecraft.behaviours.ClientBoundPacketBehaviours;
+import org.koekepan.VAST.Connection.ClientConnectedInstance;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -11,11 +12,11 @@ public class PacketHandler implements Runnable {
     Deque<PacketWrapper> packetQueue = new ArrayDeque<PacketWrapper>();
     BehaviourHandler<Packet> behaviourHandler = new BehaviourHandler<Packet>();
 
-    public PacketHandler() {
+    public PacketHandler(ClientConnectedInstance clientInstance) {
         this.behaviourHandler = new BehaviourHandler<Packet>();
-        ServerSessionPacketBehaviours serverSessionPacketBehaviours = new ServerSessionPacketBehaviours();
-        serverSessionPacketBehaviours.registerForwardingBehaviour();
-        this.behaviourHandler.registerBehaviour(serverSessionPacketBehaviours);
+        ClientBoundPacketBehaviours clientBoundPacketBehaviours = new ClientBoundPacketBehaviours(clientInstance);
+        clientBoundPacketBehaviours.registerForwardingBehaviour();
+        this.setBehaviours(clientBoundPacketBehaviours);
     }
 
     public void addPacket(PacketWrapper packetWrapper) {

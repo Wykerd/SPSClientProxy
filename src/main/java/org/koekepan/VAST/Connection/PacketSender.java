@@ -72,6 +72,7 @@ public class PacketSender implements Runnable { // This is the packet sender, it
                         if (spsPacket != null) {
 //                            VastConnection.getInstance().send(packet);
                             clientInstances_PacketSenders.get(this).getVastConnection().publish(spsPacket);
+                            removePacket(packetWrapper.getPacket());
                         }
                     }
                 }
@@ -86,4 +87,15 @@ public class PacketSender implements Runnable { // This is the packet sender, it
 
     }
 
+    public void removePacket(Packet packet) {
+        PacketWrapper packetWrapper = packetWrapperMap.get(packet);
+        if (packetWrapper != null) {
+            if (packetWrapper.clientBound) {
+                clientboundPacketQueue.remove(packetWrapper.queueNumber);
+            } else {
+                serverboundPacketQueue.remove(packetWrapper.queueNumber);
+            }
+        }
+        PacketWrapper.removePacketWrapper(packet);
+    }
 }

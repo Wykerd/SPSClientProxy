@@ -1,24 +1,20 @@
-package org.koekepan.herobrineproxy.packet.behaviours.server.entity;
+package org.koekepan.Minecraft.behaviours.server.entity;
 
 import com.github.steveice10.mc.protocol.packet.ingame.server.entity.ServerEntityTeleportPacket;
 import com.github.steveice10.packetlib.packet.Packet;
-import org.koekepan.herobrineproxy.Logger;
-import org.koekepan.herobrineproxy.behaviour.Behaviour;
-import org.koekepan.herobrineproxy.packet.PacketSender;
-import org.koekepan.herobrineproxy.session.ClientProxySession;
-import org.koekepan.herobrineproxy.session.IProxySessionNew;
-import org.koekepan.herobrineproxy.sps.SPSConnection;
-import org.koekepan.herobrineproxy.sps.SPSPacket;
+import org.koekepan.VAST.Connection.ClientConnectedInstance;
+import org.koekepan.VAST.Packet.Behaviour;
+import org.koekepan.VAST.Packet.PacketWrapper;
 
 public class ServerEntityTeleportPacketBehaviour implements Behaviour<Packet> {
-    private IProxySessionNew proxySession;
+    private ClientConnectedInstance clientInstance;
 //    private IServerSession serverSession;
 
     private ServerEntityTeleportPacketBehaviour() {
     }
 
-    public ServerEntityTeleportPacketBehaviour(IProxySessionNew proxySession) {
-        this.proxySession = proxySession;
+    public ServerEntityTeleportPacketBehaviour(ClientConnectedInstance clientInstance) {
+        this.clientInstance = clientInstance;
 //        this.serverSession = serverSession;
     }
 
@@ -26,23 +22,31 @@ public class ServerEntityTeleportPacketBehaviour implements Behaviour<Packet> {
     public void process(Packet packet) {
         ServerEntityTeleportPacket serverEntityTeleportPacket = (ServerEntityTeleportPacket) packet;
 
-        if (ClientProxySession.getEntityID() == 0) {
-            Logger.log(this, Logger.Level.ERROR, new String[]{"behaviour", "entityMovement"}, "Client is not assigned an EntityID yet.");
+        if (clientInstance.getEntityID() <= 0) {
+//            Logger.log(this, Logger.Level.ERROR, new String[]{"behaviour", "entityMovement"}, "Client is not assigned an EntityID yet.");
+            System.out.println("Client is not assigned an EntityID yet.");
             return;
-        } else if (serverEntityTeleportPacket.getEntityId() != ClientProxySession.getEntityID()) {
-            proxySession.sendPacketToClient(packet);
+        } else if (serverEntityTeleportPacket.getEntityId() != clientInstance.getEntityID()) {
+            PacketWrapper.setProcessed(packet, true);
+//            clientInstance.sendPacketToClient(packet);
             return;
-        } else if (SPSConnection.playerSpecificPacketMap.containsKey(packet)){
+        } else {
+            PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
+            if (packetWrapper.PlayerSpecific() != null){
 
-            if (SPSConnection.playerSpecificPacketMap.get(packet).channel.equals(proxySession.getUsername())){
-                proxySession.sendPacketToClient(packet);
-            } else {
-                SPSConnection.playerSpecificPacketMap.remove(packet);
-                PacketSender.removePacketFromQueue(packet);
-                Logger.log(this, Logger.Level.WARN, new String[]{"behaviour", "entityMovement"}, "EntityTeleport not forwarded to client.");
+                if (packetWrapper.PlayerSpecific().equals(clientInstance.getUsername())){
+                    PacketWrapper.setProcessed(packet, true);
+//                    clientInstance.sendPacketToClient(packet);
+                } else {
+//                    SPSConnection.playerSpecificPacketMap.remove(packet);
+//                    PacketSender.removePacketFromQueue(packet);
+//                    Logger.log(this, Logger.Level.WARN, new String[]{"behaviour", "entityMovement"}, "EntityTeleport not forwarded to client.");
+                    System.out.println("EntityTeleport not forwarded to client.");
+                    clientInstance.getPacketSender().removePacket(packet);
+                    return;
+                }
                 return;
             }
-            return;
         }
 
     }

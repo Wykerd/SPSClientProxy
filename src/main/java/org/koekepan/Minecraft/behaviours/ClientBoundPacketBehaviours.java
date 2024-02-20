@@ -1,7 +1,11 @@
 package org.koekepan.Minecraft.behaviours;
 
 import org.koekepan.Minecraft.behaviours.login.ServerLoginSuccessPacketBehaviour;
+import org.koekepan.Minecraft.behaviours.server.ServerChunkDataPacketBehaviour;
 import org.koekepan.Minecraft.behaviours.server.ServerJoinGamePacketBehaviour;
+import org.koekepan.Minecraft.behaviours.server.ServerPluginMessagePacketBehaviour;
+import org.koekepan.Minecraft.behaviours.server.ServerUnloadChunkPacketBehaviour;
+import org.koekepan.Minecraft.behaviours.server.entity.*;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 import org.koekepan.VAST.Packet.BehaviourHandler;
 
@@ -16,14 +20,14 @@ import com.github.steveice10.mc.protocol.packet.login.server.*;
 import com.github.steveice10.mc.protocol.packet.status.server.*;
 import com.github.steveice10.packetlib.packet.Packet;
 
-public class ServerSessionPacketBehaviours extends BehaviourHandler<Packet> {
+public class ClientBoundPacketBehaviours extends BehaviourHandler<Packet> {
 
 	private ClientConnectedInstance clientInstance;
 //	private IServerSession serverSession;
 	private ForwardPacketBehaviour clientForwarder;
 
-	public ServerSessionPacketBehaviours(ClientConnectedInstance clientInstance) {
-		this.clientInstance = this.clientInstance;
+	public ClientBoundPacketBehaviours(ClientConnectedInstance clientInstance) {
+		this.clientInstance = clientInstance;
 //		this.serverSession = serverSession;
 	}
 	
@@ -47,7 +51,9 @@ public class ServerSessionPacketBehaviours extends BehaviourHandler<Packet> {
 		registerBehaviour(ServerSpawnGlobalEntityPacket.class, clientForwarder);
 		registerBehaviour(ServerSpawnMobPacket.class, clientForwarder);
 		registerBehaviour(ServerSpawnPaintingPacket.class, clientForwarder);
-		registerBehaviour(ServerSpawnPlayerPacket.class, clientForwarder);
+
+		registerBehaviour(ServerSpawnPlayerPacket.class, new ServerSpawnPlayerPacketBehaviour(clientInstance));
+
 		registerBehaviour(ServerEntityAnimationPacket.class, clientForwarder);
 		registerBehaviour(ServerStatisticsPacket.class, clientForwarder);
 		registerBehaviour(ServerBlockBreakAnimPacket.class, clientForwarder);
@@ -70,18 +76,34 @@ public class ServerSessionPacketBehaviours extends BehaviourHandler<Packet> {
 		registerBehaviour(ServerDisconnectPacket.class, clientForwarder);
 		registerBehaviour(ServerEntityStatusPacket.class, clientForwarder);
 		registerBehaviour(ServerExplosionPacket.class, clientForwarder);
-		registerBehaviour(ServerUnloadChunkPacket.class, clientForwarder);
+
+		registerBehaviour(ServerUnloadChunkPacket.class, new ServerUnloadChunkPacketBehaviour(clientInstance));
+//		registerBehaviour(ServerUnloadChunkPacket.class, clientForwarder);
+
 		registerBehaviour(ServerNotifyClientPacket.class, clientForwarder);
 		registerBehaviour(ServerKeepAlivePacket.class, clientForwarder);
-		registerBehaviour(ServerChunkDataPacket.class, clientForwarder);
+
+
+		registerBehaviour(ServerChunkDataPacket.class, new ServerChunkDataPacketBehaviour(clientInstance));
+//		registerBehaviour(ServerChunkDataPacket.class, clientForwarder);
+
 		registerBehaviour(ServerPlayEffectPacket.class, clientForwarder);
 		registerBehaviour(ServerSpawnParticlePacket.class, clientForwarder);
 		registerBehaviour(ServerJoinGamePacket.class, new ServerJoinGamePacketBehaviour(clientInstance));
 		registerBehaviour(ServerMapDataPacket.class, clientForwarder);
-		registerBehaviour(ServerEntityPositionPacket.class, clientForwarder);
-		registerBehaviour(ServerEntityPositionRotationPacket.class, clientForwarder);
-		registerBehaviour(ServerEntityRotationPacket.class, clientForwarder);
-		registerBehaviour(ServerEntityMovementPacket.class, clientForwarder);
+
+
+		/// Movement Packets ///
+		/// These packets are used to update the position of an entity on the client. They should not be forwarded to the client
+		/// if the entityId contained in the packet is the entityId of the client.
+		registerBehaviour(ServerEntityPositionPacket.class, 		new ServerEntityMovementPacketBehaviour(clientInstance));
+		registerBehaviour(ServerEntityPositionRotationPacket.class, new ServerEntityMovementPacketBehaviour(clientInstance));
+		registerBehaviour(ServerEntityRotationPacket.class, 		new ServerEntityMovementPacketBehaviour(clientInstance));
+		registerBehaviour(ServerEntityMovementPacket.class, 		new ServerEntityMovementPacketBehaviour(clientInstance));
+
+		registerBehaviour(ServerEntityHeadLookPacket.class, 		new ServerEntityHeadLookPacketBehaviour(clientInstance));
+		////////////////////////
+
 		registerBehaviour(ServerVehicleMovePacket.class, clientForwarder);
 		registerBehaviour(ServerOpenTileEntityEditorPacket.class, clientForwarder);
 		registerBehaviour(ServerPlayerAbilitiesPacket.class, clientForwarder);
@@ -92,15 +114,17 @@ public class ServerSessionPacketBehaviours extends BehaviourHandler<Packet> {
 		registerBehaviour(ServerEntityRemoveEffectPacket.class, clientForwarder);
 		registerBehaviour(ServerResourcePackSendPacket.class, clientForwarder);
 		registerBehaviour(ServerRespawnPacket.class, clientForwarder);
-		registerBehaviour(ServerEntityHeadLookPacket.class, clientForwarder);
+
 		registerBehaviour(ServerWorldBorderPacket.class, clientForwarder);
 		registerBehaviour(ServerSwitchCameraPacket.class, clientForwarder);
 		registerBehaviour(ServerPlayerChangeHeldItemPacket.class, clientForwarder);
 		registerBehaviour(ServerDisplayScoreboardPacket.class, clientForwarder);
 		registerBehaviour(ServerEntityMetadataPacket.class, clientForwarder);
 		registerBehaviour(ServerEntityAttachPacket.class, clientForwarder);
-		registerBehaviour(ServerEntityVelocityPacket.class, clientForwarder);
-		registerBehaviour(ServerEntityEquipmentPacket.class, clientForwarder);
+
+		registerBehaviour(ServerEntityVelocityPacket.class, 		new ServerEntityVelocityPacketBehaviour(clientInstance));
+		registerBehaviour(ServerEntityEquipmentPacket.class, 		new ServerEntityEquipmentPacketBehaviour(clientInstance));
+
 		registerBehaviour(ServerPlayerPositionRotationPacket.class, clientForwarder);
 		registerBehaviour(ServerPlayerSetExperiencePacket.class, clientForwarder);
 		registerBehaviour(ServerPlayerHealthPacket.class, clientForwarder);
@@ -114,14 +138,17 @@ public class ServerSessionPacketBehaviours extends BehaviourHandler<Packet> {
 		registerBehaviour(ServerPlayBuiltinSoundPacket.class, clientForwarder);
 		registerBehaviour(ServerPlayerListDataPacket.class, clientForwarder);
 		registerBehaviour(ServerEntityCollectItemPacket.class, clientForwarder);
-		registerBehaviour(ServerEntityTeleportPacket.class, clientForwarder);
+
+		registerBehaviour(ServerEntityTeleportPacket.class, 		new ServerEntityTeleportPacketBehaviour(clientInstance));
+
 		registerBehaviour(ServerEntityPropertiesPacket.class, clientForwarder);
 		registerBehaviour(ServerEntityEffectPacket.class, clientForwarder);
-		
+
 		registerBehaviour(StatusResponsePacket.class, clientForwarder);
 		registerBehaviour(StatusPongPacket.class, clientForwarder);
-		
+
 		registerBehaviour(ServerPluginMessagePacket.class, new ServerPluginMessagePacketBehaviour(clientInstance));
+//		registerBehaviour(ServerPluginMessagePacket.class, new ServerPluginMessagePacketBehaviour(clientInstance));
 	}
 	
 	

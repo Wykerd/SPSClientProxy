@@ -1,4 +1,4 @@
-package org.koekepan.herobrineproxy.packet.behaviours.server;
+package org.koekepan.Minecraft.behaviours.server;
 
 import com.github.steveice10.mc.protocol.packet.ingame.server.ServerJoinGamePacket;
 import com.github.steveice10.packetlib.packet.Packet;

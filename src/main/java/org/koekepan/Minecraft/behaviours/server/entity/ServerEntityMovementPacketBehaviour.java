@@ -1,25 +1,20 @@
-package org.koekepan.herobrineproxy.packet.behaviours.server.entity;
+package org.koekepan.Minecraft.behaviours.server.entity;
 
 import com.github.steveice10.mc.protocol.packet.ingame.server.entity.ServerEntityMovementPacket;
-import com.github.steveice10.packetlib.Client;
 import com.github.steveice10.packetlib.packet.Packet;
-import org.koekepan.herobrineproxy.Logger;
-import org.koekepan.herobrineproxy.behaviour.Behaviour;
-import org.koekepan.herobrineproxy.packet.PacketSender;
-import org.koekepan.herobrineproxy.session.ClientProxySession;
-import org.koekepan.herobrineproxy.session.IProxySessionNew;
-import org.koekepan.herobrineproxy.sps.SPSConnection;
-import org.koekepan.herobrineproxy.sps.SPSPacket;
+import org.koekepan.VAST.Connection.ClientConnectedInstance;
+import org.koekepan.VAST.Packet.Behaviour;
+import org.koekepan.VAST.Packet.PacketWrapper;
 
 public class ServerEntityMovementPacketBehaviour implements Behaviour<Packet> {
-    private IProxySessionNew proxySession;
+    private ClientConnectedInstance clientInstance;
 //    private IServerSession serverSession;
 
     private ServerEntityMovementPacketBehaviour() {
     }
 
-    public ServerEntityMovementPacketBehaviour(IProxySessionNew proxySession) {
-        this.proxySession = proxySession;
+    public ServerEntityMovementPacketBehaviour(ClientConnectedInstance clientInstance) {
+        this.clientInstance = clientInstance;
 //        this.serverSession = serverSession;
     }
 
@@ -35,20 +30,22 @@ public class ServerEntityMovementPacketBehaviour implements Behaviour<Packet> {
 //            Logger.log(this, Logger.Level.ERROR, new String[]{"behaviour", "entityMovement"}, "Client is not assigned an EntityID yet.");
 //            return;
 //        } else
-        if (serverEntityMovementPacket.getEntityId() != ClientProxySession.getEntityID()) {
-            proxySession.sendPacketToClient(packet);
+        if (serverEntityMovementPacket.getEntityId() != clientInstance.getEntityID()) {
+            PacketWrapper.setProcessed(packet, true);
+//            clientInstance.sendPacketToClient(packet);
             return;
-        } else if (SPSConnection.playerSpecificPacketMap.containsKey(packet)){
+        } else {
+            PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
+            if (packetWrapper.PlayerSpecific() != null){
 
-            if (SPSConnection.playerSpecificPacketMap.get(packet).channel.equals(proxySession.getUsername())){
-                proxySession.sendPacketToClient(packet);
-            } else {
-                Logger.log(this, Logger.Level.WARN, new String[]{"behaviour", "entityMovement"}, "Entity movement not forwarded to client: " + SPSConnection.playerSpecificPacketMap.get(packet).channel);
-                PacketSender.removePacketFromQueue(packet);
-                SPSConnection.playerSpecificPacketMap.remove(packet);
+                if (packetWrapper.PlayerSpecific().equals(clientInstance.getUsername())){
+                    PacketWrapper.setProcessed(packet, true);
+                } else {
+                    clientInstance.getPacketSender().removePacket(packet);
+                    return;
+                }
                 return;
             }
-            return;
         }
     }
 }

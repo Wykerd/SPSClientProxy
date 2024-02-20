@@ -1,24 +1,23 @@
-package org.koekepan.herobrineproxy.packet.behaviours.server;
+package org.koekepan.Minecraft.behaviours.server;
 
-import com.github.steveice10.mc.protocol.packet.ingame.server.ServerJoinGamePacket;
 import com.github.steveice10.mc.protocol.packet.ingame.server.world.ServerChunkDataPacket;
 import com.github.steveice10.packetlib.packet.Packet;
-import org.koekepan.herobrineproxy.ConsoleIO;
-import org.koekepan.herobrineproxy.Logger;
-import org.koekepan.herobrineproxy.behaviour.Behaviour;
-import org.koekepan.herobrineproxy.session.*;
+import org.koekepan.Minecraft.ChunkPosition;
+import org.koekepan.VAST.Connection.ClientConnectedInstance;
+import org.koekepan.VAST.Packet.Behaviour;
+import org.koekepan.VAST.Packet.PacketWrapper;
 
 public class ServerChunkDataPacketBehaviour implements Behaviour<Packet> {
-    private IProxySessionNew proxySession;
-    private IServerSession serverSession;
+    private ClientConnectedInstance clientInstance;
+//    private IServerSession serverSession;
 
-    public ServerChunkDataPacketBehaviour(IProxySessionNew proxySession) {
-        this.proxySession = proxySession;
+    public ServerChunkDataPacketBehaviour(ClientConnectedInstance clientInstance) {
+        this.clientInstance = clientInstance;
     }
 
     public void process(final Packet packet) {
-        proxySession.sendPacketToClient(packet);
-
+//        clientInstance.sendPacketToClient(packet);
+        PacketWrapper.setProcessed(packet, true);
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -34,38 +33,17 @@ public class ServerChunkDataPacketBehaviour implements Behaviour<Packet> {
 // Calculate the block coordinates of the four corners
                 int x1 = blockX;
                 int z1 = blockZ;
-                Logger.log(this, Logger.Level.DEBUG, new String[]{"behaviour","network"},"Packet received for chunk with x,y: (" + x1 + ", " + z1 + ")");
+//                Logger.log(this, Logger.Level.DEBUG, new String[]{"behaviour","network"},"Packet received for chunk with x,y: (" + x1 + ", " + z1 + ")");
                 System.out.println("Received chunk packet for chunk with x,y: (" + x1 + ", " + z1 + ")");
 
-                final ClientProxySession clientProxySession = (ClientProxySession) proxySession;
-                clientProxySession.receiveChunkPosition(new ChunkPosition(x1, z1));
 
-                clientProxySession.updateIsolatedPositions();
+                clientInstance.receiveChunkPosition(new ChunkPosition(x1, z1));
+                clientInstance.updateIsolatedPositions();
+//                .subscribepolygon(new Arraylist<>(isolatedPositions))
+
+
             }
         }).start();
-
-
-
-//        clientProxySession.updateIsolatedPositions();
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                clientProxySession.updateIsolatedPositions();
-//            }
-//        }).start();
-
-
-
-
-//        serverJoinPacket.getEntityId();
-        //proxySession.setJoined(true);
-//        ConsoleIO.println("player \""+proxySession.getUsername()+"\" with entityID <"+serverJoinPacket.getEntityId()+"> has successfully joined world");
-//        serverSession.setJoined(true);
-
-        //proxySession.registerForPluginChannels();
-        //proxySession.getJoinedCountDownLatch().countDown();
-        //MinecraftProtocol protocol = (MinecraftProtocol)(proxySession.getServer().getPacketProtocol());
-        //ConsoleIO.println("ServerJoinGamePacketBehaviour::process => Protocol status <"+protocol.getSubProtocol().name()+">");
     }
 
 }
