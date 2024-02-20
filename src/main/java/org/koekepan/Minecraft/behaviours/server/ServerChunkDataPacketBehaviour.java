@@ -3,9 +3,12 @@ package org.koekepan.Minecraft.behaviours.server;
 import com.github.steveice10.mc.protocol.packet.ingame.server.world.ServerChunkDataPacket;
 import com.github.steveice10.packetlib.packet.Packet;
 import org.koekepan.Minecraft.ChunkPosition;
+import org.koekepan.Minecraft.SubscriptionAreaManager;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 import org.koekepan.VAST.Packet.Behaviour;
 import org.koekepan.VAST.Packet.PacketWrapper;
+
+import java.util.List;
 
 public class ServerChunkDataPacketBehaviour implements Behaviour<Packet> {
     private ClientConnectedInstance clientInstance;
@@ -37,9 +40,12 @@ public class ServerChunkDataPacketBehaviour implements Behaviour<Packet> {
                 System.out.println("Received chunk packet for chunk with x,y: (" + x1 + ", " + z1 + ")");
 
 
-                clientInstance.receiveChunkPosition(new ChunkPosition(x1, z1));
-                clientInstance.updateIsolatedPositions();
-//                .subscribepolygon(new Arraylist<>(isolatedPositions))
+                SubscriptionAreaManager.receiveChunkPosition( clientInstance, new ChunkPosition(x1, z1));
+
+                List<ChunkPosition> isolatedPositions = SubscriptionAreaManager.updateIsolatedPositions(clientInstance);
+                if (isolatedPositions != null) {
+                    clientInstance.getVastConnection().subscribePolygon(isolatedPositions);
+                }
 
 
             }

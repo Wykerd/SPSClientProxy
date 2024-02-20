@@ -2,13 +2,14 @@ package org.koekepan.Minecraft.behaviours.server;
 
 import com.github.steveice10.mc.protocol.packet.ingame.server.world.ServerUnloadChunkPacket;
 import com.github.steveice10.packetlib.packet.Packet;
+import org.koekepan.Minecraft.SubscriptionAreaManager;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 import org.koekepan.VAST.Packet.Behaviour;
 import org.koekepan.VAST.Packet.PacketWrapper;
 
 public class ServerUnloadChunkPacketBehaviour implements Behaviour<Packet> {
     private ClientConnectedInstance clientInstance;
-    private IServerSession serverSession;
+//    private IServerSession serverSession;
     public ServerUnloadChunkPacketBehaviour(ClientConnectedInstance clientInstance) {
         this.clientInstance = clientInstance;
     }
@@ -34,8 +35,8 @@ public class ServerUnloadChunkPacketBehaviour implements Behaviour<Packet> {
                 int z1 = blockZ;
 //        System.out.println("Packet received for unload-chunk with x,y: (" + x1 + ", " + z1 + ")");
 
-                final ClientProxySession clientProxySession = (ClientProxySession) clientInstance;
-                clientProxySession.removeChunkPosition(x1, z1);
+//                final ClientProxySession clientProxySession = (ClientProxySession) clientInstance;
+                SubscriptionAreaManager.removeChunkPosition(clientInstance, x1, z1);
             }
         }).start();
 
