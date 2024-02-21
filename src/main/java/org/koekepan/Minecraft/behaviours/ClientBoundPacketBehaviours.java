@@ -3,10 +3,11 @@ package org.koekepan.Minecraft.behaviours;
 import org.koekepan.Minecraft.behaviours.login.ServerLoginSuccessPacketBehaviour;
 import org.koekepan.Minecraft.behaviours.server.ServerChunkDataPacketBehaviour;
 import org.koekepan.Minecraft.behaviours.server.ServerJoinGamePacketBehaviour;
-import org.koekepan.Minecraft.behaviours.server.ServerPluginMessagePacketBehaviour;
+//import org.koekepan.Minecraft.behaviours.server.ServerPluginMessagePacketBehaviour;
 import org.koekepan.Minecraft.behaviours.server.ServerUnloadChunkPacketBehaviour;
 import org.koekepan.Minecraft.behaviours.server.entity.*;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
+import org.koekepan.VAST.CustomPackets.EstablishConnectionPacket;
 import org.koekepan.VAST.Packet.BehaviourHandler;
 
 import com.github.steveice10.mc.protocol.packet.ingame.server.*;
@@ -147,7 +148,7 @@ public class ClientBoundPacketBehaviours extends BehaviourHandler<Packet> {
 		registerBehaviour(StatusResponsePacket.class, clientForwarder);
 		registerBehaviour(StatusPongPacket.class, clientForwarder);
 
-		registerBehaviour(ServerPluginMessagePacket.class, new ServerPluginMessagePacketBehaviour(clientInstance));
+//		registerBehaviour(ServerPluginMessagePacket.class, new ServerPluginMessagePacketBehaviour(clientInstance));
 //		registerBehaviour(ServerPluginMessagePacket.class, new ServerPluginMessagePacketBehaviour(clientInstance));
 	}
 	

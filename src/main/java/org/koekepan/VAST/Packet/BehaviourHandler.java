@@ -51,5 +51,22 @@ public class BehaviourHandler<T> {
         }
     }
 
+    // Static merge method
+    public static <T> BehaviourHandler<T> mergeBehaviourHandlers(BehaviourHandler<T> handler1, BehaviourHandler<T> handler2) {
+        BehaviourHandler<T> newHandler = new BehaviourHandler<>();
+
+        // Copy behaviours from the first handler
+        for (Class<? extends T> type : handler1.getTypes()) {
+            newHandler.registerBehaviour(type, handler1.getBehaviour(type));
+        }
+
+        // Copy behaviours from the second handler, possibly overwriting
+        for (Class<? extends T> type : handler2.getTypes()) {
+            newHandler.registerBehaviour(type, handler2.getBehaviour(type));
+        }
+
+        return newHandler;
+    }
+
 
 }

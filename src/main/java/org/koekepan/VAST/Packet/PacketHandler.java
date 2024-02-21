@@ -2,6 +2,7 @@ package org.koekepan.VAST.Packet;
 
 import com.github.steveice10.packetlib.packet.Packet;
 import org.koekepan.Minecraft.behaviours.ClientBoundPacketBehaviours;
+import org.koekepan.Minecraft.behaviours.ServerBoundPacketBehaviours;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 
 import java.util.ArrayDeque;
@@ -16,7 +17,14 @@ public class PacketHandler implements Runnable {
         this.behaviourHandler = new BehaviourHandler<Packet>();
         ClientBoundPacketBehaviours clientBoundPacketBehaviours = new ClientBoundPacketBehaviours(clientInstance);
         clientBoundPacketBehaviours.registerForwardingBehaviour();
-        this.setBehaviours(clientBoundPacketBehaviours);
+
+        ServerBoundPacketBehaviours serverBoundPacketBehaviours = new ServerBoundPacketBehaviours(clientInstance);
+        serverBoundPacketBehaviours.registerForwardingBehaviour();
+
+        //Merge the behaviours
+        BehaviourHandler<Packet> behaviourHandler = BehaviourHandler.mergeBehaviourHandlers(clientBoundPacketBehaviours, serverBoundPacketBehaviours);
+
+        this.setBehaviours(behaviourHandler);
     }
 
     public void addPacket(PacketWrapper packetWrapper) {

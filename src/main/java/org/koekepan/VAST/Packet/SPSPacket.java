@@ -15,7 +15,8 @@ public class SPSPacket {
     public SPSPacket(Packet packet, String username, String channel) {
 
 
-        this.username = username;
+//        this.username = username;
+        this.username = username + "&" + PacketWrapper.get_unique_id(packet);
         this.channel = channel;
         this.packet = packet;
 //		this.x = 3;

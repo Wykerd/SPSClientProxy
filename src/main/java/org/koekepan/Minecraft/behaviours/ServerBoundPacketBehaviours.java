@@ -1,9 +1,5 @@
 package org.koekepan.Minecraft.behaviours;
 
-import org.koekepan.herobrineproxy.packet.behaviours.client.ClientHandshakePacketBehaviour;
-import org.koekepan.herobrineproxy.packet.behaviours.client.ClientLoginStartPacketBehaviour;
-
-import com.github.steveice10.mc.protocol.packet.handshake.client.HandshakePacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientChatPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientKeepAlivePacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.ClientPluginMessagePacket;
@@ -35,42 +31,47 @@ import com.github.steveice10.mc.protocol.packet.ingame.client.world.ClientTelepo
 import com.github.steveice10.mc.protocol.packet.ingame.client.world.ClientUpdateSignPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.client.world.ClientVehicleMovePacket;
 import com.github.steveice10.mc.protocol.packet.login.client.EncryptionResponsePacket;
-import com.github.steveice10.mc.protocol.packet.login.client.LoginStartPacket;
 import com.github.steveice10.mc.protocol.packet.status.client.StatusPingPacket;
 import com.github.steveice10.mc.protocol.packet.status.client.StatusQueryPacket;
 import com.github.steveice10.packetlib.packet.Packet;
+import org.koekepan.VAST.Connection.ClientConnectedInstance;
+import org.koekepan.VAST.CustomPackets.EstablishConnectionPacket;
+import org.koekepan.VAST.Packet.BehaviourHandler;
 
 public class ServerBoundPacketBehaviours extends BehaviourHandler<Packet> {
 
-	private SPSConnection spsConnection = null;
-	private IClientSession clientSession;
-	private IProxySessionNew proxySession;
+//	private SPSConnection spsConnection = null;
+//	private IClientSession clientSession;
+	private ClientConnectedInstance clientInstance;
 	private ForwardPacketBehaviour serverForwarder;
 	private ForwardPacketBehaviour clientForwarder;
 
-	public ServerBoundPacketBehaviours(IProxySessionNew proxySession) {
-		this.proxySession = proxySession;
-	}
+//	public ServerBoundPacketBehaviours(IProxySessionNew proxySession) {
+//		this.proxySession = proxySession;
+//	}
+//
+//	public ServerBoundPacketBehaviours(IProxySessionNew proxySession, SPSConnection spsConnection) {
+//		this.proxySession = proxySession;
+//		this.spsConnection = spsConnection;
+//	}
 
-	public ServerBoundPacketBehaviours(IProxySessionNew proxySession, SPSConnection spsConnection) {
-		this.proxySession = proxySession;
-		this.spsConnection = spsConnection;
+	public ServerBoundPacketBehaviours(ClientConnectedInstance clientInstance) {
+		this.clientInstance = clientInstance;
 	}
 	
 
-	public void registerDefaultBehaviours(IClientSession clientSession) {
-		this.clientSession = clientSession;
-		clearBehaviours();
-		registerBehaviour(HandshakePacket.class, new ClientHandshakePacketBehaviour(this.clientSession));										// 0x06 Player Position And Look
-		registerBehaviour(LoginStartPacket.class, new ClientLoginStartPacketBehaviour(proxySession, spsConnection));												// 0x01 Login Start
-	}
-	
-	
-	public void registerForwardingBehaviour(IServerSession serverSession) {
+//	public void registerDefaultBehaviours(IClientSession clientSession) {
+//		this.clientSession = clientSession;
+//		clearBehaviours();
+//		registerBehaviour(HandshakePacket.class, new ClientHandshakePacketBehaviour(this.clientSession));										// 0x06 Player Position And Look
+//		registerBehaviour(LoginStartPacket.class, new ClientLoginStartPacketBehaviour(proxySession, spsConnection));												// 0x01 Login Start
+//	}
+
+	public void registerForwardingBehaviour() {
 
 		//////////////////////////////////// PACKETS THAT ARE SENT TO THE SERVER /////////////////////////////////////
 
-		serverForwarder = new ForwardPacketBehaviour(proxySession, true);
+		serverForwarder = new ForwardPacketBehaviour(clientInstance, true);
 		registerBehaviour(EncryptionResponsePacket.class, serverForwarder);
 		registerBehaviour(ClientTeleportConfirmPacket.class, serverForwarder);
 		registerBehaviour(ClientTabCompletePacket.class, serverForwarder);
@@ -105,5 +106,7 @@ public class ServerBoundPacketBehaviours extends BehaviourHandler<Packet> {
 		
 		registerBehaviour(StatusQueryPacket.class, serverForwarder);
 		registerBehaviour(StatusPingPacket.class, serverForwarder);
+
+		registerBehaviour(EstablishConnectionPacket.class, serverForwarder);  // Custom packet for establishing a connection (login) with the server
 	}
 }

@@ -5,6 +5,7 @@ import org.koekepan.VAST.Packet.Behaviour;
 import org.koekepan.VAST.Packet.PacketWrapper;
 
 import com.github.steveice10.packetlib.packet.Packet;
+import org.koekepan.VAST.Packet.SPSPacket;
 
 public class ForwardPacketBehaviour implements Behaviour<Packet> {
 
@@ -23,9 +24,12 @@ public class ForwardPacketBehaviour implements Behaviour<Packet> {
 	
 	@Override
 	public void process(Packet packet) {
-//		if (toServer) {
+		if (toServer) {
 //			clientInstance.getPacketSender().addServerboundPacket(packet);
-//		} else {
+			SPSPacket spsPacket = new SPSPacket(packet, clientInstance.getUsername(), "serverBound");
+			PacketWrapper.getPacketWrapper(packet).setSPSPacket(spsPacket);
+		}
+//		else {
 //			clientInstance.getPacketSender().addClientboundPacket(packet);
 //		}
 		PacketWrapper.setProcessed(packet, true); // Server/Clientbound packets are assigned in ClientConnectedInstance and on Vast Publication

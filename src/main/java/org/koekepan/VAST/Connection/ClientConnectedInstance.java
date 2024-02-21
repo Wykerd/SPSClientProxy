@@ -10,6 +10,9 @@ import org.koekepan.VAST.CustomPackets.EstablishConnectionPacket;
 import org.koekepan.VAST.Packet.PacketHandler;
 
 import java.util.HashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class ClientConnectedInstance {
     private VastConnection vastConnection; // The connection to the VAST_COM server, used to publish packets to the vast network
@@ -30,11 +33,26 @@ public class ClientConnectedInstance {
         this.packetSender = new PacketSender();
         this.packetHandler = new PacketHandler(this);
 
+        clientInstances_PacketSenders.put(packetSender, this);
+        packetSender.setClientSession(this.session);
+
+        ScheduledExecutorService packetExecutor;
+        packetExecutor = Executors.newSingleThreadScheduledExecutor();
+        packetExecutor.scheduleAtFixedRate(packetSender, 0, 50, TimeUnit.MILLISECONDS);
+
+        ScheduledExecutorService handlerExecutor;
+        handlerExecutor = Executors.newSingleThreadScheduledExecutor();
+        handlerExecutor.scheduleAtFixedRate(packetHandler, 0, 50, TimeUnit.MILLISECONDS);
+
         this.vastConnection.connect();
     }
 
     public String getUsername() {
         return session.getFlag("username");
+    }
+
+    public PacketHandler getPacketHandler() {
+        return packetHandler;
     }
 
     private static class ClientSessionListener extends SessionAdapter { // This is the client listener (Listens to the packets sent/received from client)
@@ -55,23 +73,22 @@ public class ClientConnectedInstance {
                 System.out.println("Received login packet from " + username);
 
                 EstablishConnectionPacket establishConnectionPacket = new EstablishConnectionPacket(username, true);
-//                SPSPacket spsPacket = new SPSPacket(establishConnectionPacket, username, "serverBound");
 
-////              Use the username to connect to the actual Minecraft server
-//                MinecraftProtocol protocol = new MinecraftProtocol(username);
-//
-////                serverSession = new Client("server.host.com", 25565, protocol, new TcpSessionFactory());
-//                Client client = new Client("server.host.com", 25565, protocol, new TcpSessionFactory());
-//                serverSession = client.getSession();
-//
-////              Add a listener to handle packets from the Minecraft server
-//                serverSession.addListener(new ServerSessionListener());
-//                serverSession.connect(); // This initiates the connection
+                if (App.clientInstances.get(event.getSession()) != null) {
+                    App.clientInstances.get(event.getSession()).packetSender.addServerboundPacket(establishConnectionPacket);
+                } else {
+                    System.out.println("Client instance is null");
+                }
+//                App.clientInstances.get(event.getSession()).packetSender.addServerboundPacket(establishConnectionPacket );
+//                App.clientInstances.get(event.getSession()).packetHandler.addPacket(establishConnectionPacket);
 
-//                vastConnection.publish(spsPacket);
-//                App.clientInstances.get(event.getSession()).vastConnection.publish(spsPacket);
-                App.clientInstances.get(event.getSession()).packetSender.addServerboundPacket(establishConnectionPacket);
-
+            } else {
+                // Forward packets to the Minecraft server (VASt_COM)
+                if (App.clientInstances.get(event.getSession()) != null) {
+                    App.clientInstances.get(event.getSession()).packetSender.addServerboundPacket(event.getPacket());
+                } else {
+                    System.out.println("Client instance is null");
+                }
             }
 
 //            // Forward packets to the Minecraft server (VASt_COM)
