@@ -7,6 +7,10 @@ import org.koekepan.VAST.Connection.ClientConnectedInstance;
 import org.koekepan.VAST.Packet.Behaviour;
 import org.koekepan.VAST.Packet.PacketWrapper;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class ServerJoinGamePacketBehaviour implements Behaviour<Packet> {
 	public static boolean joined_game = false;
 	private ClientConnectedInstance clientInstance;
@@ -28,11 +32,16 @@ public class ServerJoinGamePacketBehaviour implements Behaviour<Packet> {
 
 	@Override
 	public void process(Packet packet) {
+		System.out.println("ServerJoinGamePacketBehaviour::process => Processing ServerJoinGamePacket");
 		ServerJoinGamePacket serverJoinPacket = (ServerJoinGamePacket) packet;
 
 		clientInstance.setEntityID(serverJoinPacket.getEntityId());
 		clientInstance.setJoined(true);
 
-		PacketWrapper.setProcessed(packet, true);
+//		PacketWrapper.setProcessed(packet, true);
+		clientInstance.getSession().send(packet);
+		clientInstance.getPacketSender().removePacket(packet);
+
+		clientInstance.getPacketSender().startClientSender();
 	}
 }

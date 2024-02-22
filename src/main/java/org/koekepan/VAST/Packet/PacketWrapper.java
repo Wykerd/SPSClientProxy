@@ -3,6 +3,9 @@ package org.koekepan.VAST.Packet;
 import com.github.steveice10.packetlib.packet.Packet;
 
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static java.lang.Thread.sleep;
 
 public class PacketWrapper {
     public static final HashMap<Packet, PacketWrapper> packetWrapperMap = new HashMap<Packet, PacketWrapper>();
@@ -84,7 +87,7 @@ public class PacketWrapper {
         return packetWrapperMap.get(packet);
     }
 
-    public static PacketWrapper getPacketWrapperByQueueNumber(HashMap<Integer, PacketWrapper> map, int queueNumber) {
+    public static PacketWrapper getPacketWrapperByQueueNumber(ConcurrentHashMap<Integer, PacketWrapper> map, int queueNumber) {
         return map.get(queueNumber);
     }
 
@@ -92,6 +95,8 @@ public class PacketWrapper {
         PacketWrapper packetWrapper = packetWrapperMap.get(packet);
         if (packetWrapper != null) {
             packetWrapper.isProcessed = isProcessed;
+        } else {
+            System.out.println("PacketWrapper::setProcessed => PacketWrapper is null!");
         }
     }
 

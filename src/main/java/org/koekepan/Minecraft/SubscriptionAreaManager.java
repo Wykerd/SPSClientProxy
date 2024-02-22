@@ -26,7 +26,8 @@ public class SubscriptionAreaManager {
 
     public static List<ChunkPosition> updateIsolatedPositions(ClientConnectedInstance clientInstance) {
         List<ChunkPosition> clientPositions = positions.get(clientInstance);
-        if (clientPositions != null) {
+        if (clientPositions != null && clientPositions.toArray().length == 441) {
+            System.out.println("SubscriptionAreaManager::updateIsolatedPositions => clientPositions.toArray().length == 441");
             List<ChunkPosition> isolated = isolatedPositions.get(clientInstance);
 
             isolated.clear();

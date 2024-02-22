@@ -28,7 +28,26 @@ public class PacketHandler implements Runnable {
     }
 
     public void addPacket(PacketWrapper packetWrapper) {
-        packetQueue.add(packetWrapper);
+
+//        packetQueue.add(packetWrapper);
+        if (packetWrapper != null) {
+            if (!packetWrapper.isProcessed) {
+                Packet packet = packetWrapper.getPacket();
+                if (packet != null) {
+                    new Thread(() -> {
+                        this.behaviourHandler.process(packet);
+                    }).start();
+                } else {
+                    System.out.println("PacketHandler::addPacket => Packet is null");
+                }
+            } else {
+                System.out.println("PacketHandler::addPacket => Packet is already processed");
+            }
+        } else {
+            System.out.println("PacketHandler::addPacket => PacketWrapper is null");
+        }
+
+
     }
 
     public void setBehaviours(BehaviourHandler<Packet> behaviourHandler) {
@@ -39,17 +58,36 @@ public class PacketHandler implements Runnable {
     public void run() {
 
         try {
-            if (!packetQueue.isEmpty()) {
-                PacketWrapper packetWrapper = packetQueue.poll();
-                if (packetWrapper != null) {
-                    if (!packetWrapper.isProcessed) {
-                        Packet packet = packetWrapper.getPacket();
-                        if (packet != null) {
-                            this.behaviourHandler.process(packet);
-                        }
-                    }
-                }
-            }
+
+            // New thread per process
+
+
+//            if (!packetQueue.isEmpty()) {
+//                PacketWrapper packetWrapper = packetQueue.poll();
+//                if (packetWrapper != null) {
+//                    if (!packetWrapper.isProcessed) {
+//                        Packet packet = packetWrapper.getPacket();
+//                        if (packet != null) {
+//                            new Thread(() -> {
+//                            this.behaviourHandler.process(packet);
+//                            }).start();
+//                        }
+//                    }
+//                }
+//            }
+
+
+//            if (!packetQueue.isEmpty()) {
+//                PacketWrapper packetWrapper = packetQueue.poll();
+//                if (packetWrapper != null) {
+//                    if (!packetWrapper.isProcessed) {
+//                        Packet packet = packetWrapper.getPacket();
+//                        if (packet != null) {
+//                            this.behaviourHandler.process(packet);
+//                        }
+//                    }
+//                }
+//            }
         } catch (Exception e) {
             e.printStackTrace();
         }

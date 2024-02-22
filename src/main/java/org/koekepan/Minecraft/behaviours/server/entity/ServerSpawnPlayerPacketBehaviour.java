@@ -3,7 +3,6 @@ package org.koekepan.Minecraft.behaviours.server.entity;
 import com.github.steveice10.mc.protocol.packet.ingame.server.entity.spawn.ServerSpawnPlayerPacket;
 import com.github.steveice10.packetlib.Client;
 import com.github.steveice10.packetlib.packet.Packet;
-import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 import org.koekepan.VAST.Packet.Behaviour;
 import org.koekepan.VAST.Packet.PacketWrapper;

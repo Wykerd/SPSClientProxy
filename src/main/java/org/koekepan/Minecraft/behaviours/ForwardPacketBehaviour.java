@@ -27,7 +27,20 @@ public class ForwardPacketBehaviour implements Behaviour<Packet> {
 		if (toServer) {
 //			clientInstance.getPacketSender().addServerboundPacket(packet);
 			SPSPacket spsPacket = new SPSPacket(packet, clientInstance.getUsername(), "serverBound");
-			PacketWrapper.getPacketWrapper(packet).setSPSPacket(spsPacket);
+			PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
+			if (packetWrapper != null) {
+				packetWrapper.setSPSPacket(spsPacket);
+			}
+			else {
+				//sleep for 5ms
+				try {
+					Thread.sleep(10); // Sometimes the packet wrapper is not set yet, so we sleep for a bit and try again
+					packetWrapper = PacketWrapper.getPacketWrapper(packet);
+					packetWrapper.setSPSPacket(spsPacket);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 //		else {
 //			clientInstance.getPacketSender().addClientboundPacket(packet);

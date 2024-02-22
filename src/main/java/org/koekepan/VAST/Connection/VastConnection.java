@@ -1,5 +1,6 @@
 package org.koekepan.VAST.Connection;
 
+import com.github.steveice10.packetlib.packet.Packet;
 import com.google.gson.Gson;
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -7,11 +8,14 @@ import io.socket.emitter.Emitter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import org.koekepan.App;
 import org.koekepan.Minecraft.ChunkPosition;
+import org.koekepan.VAST.Packet.PacketWrapper;
 import org.koekepan.VAST.Packet.SPSPacket;
 
 import static java.lang.Thread.sleep;
@@ -24,10 +28,14 @@ public class VastConnection {
     private final UUID uuid = UUID.randomUUID();
 
     private Socket socket;
+    private ClientConnectedInstance clientInstance;
 
-    public VastConnection(String VAST_COM_IP, int VAST_COM_PORT) {
+    private int connectionID;
+
+    public VastConnection(String VAST_COM_IP, int VAST_COM_PORT, ClientConnectedInstance clientInstance) {
         this.VAST_COM_IP = VAST_COM_IP;
         this.VAST_COM_PORT = VAST_COM_PORT;
+        this.clientInstance = clientInstance;
     }
 
     private boolean initialiseConnection() {
@@ -44,11 +52,11 @@ public class VastConnection {
                 @Override
                 public void call(Object... args) {
                     if (("Hello, client with UUID: " + uuid.toString() + ". This is Node.js Server.").equals(args[0])) {
-                        System.out.println("Successfully connected to the correct server.");
+                        System.out.println("VAST: Successfully connected to the correct server.");
                         result[0] = true;
 //						return true;
                     } else {
-                        System.out.println("Failed to connect to the correct server.");
+                        System.out.println("VAST: Failed to connect to the correct server.");
                     }
                     completableFuture.complete(true);
                 }
@@ -97,6 +105,7 @@ public class VastConnection {
             @Override
             public void call(Object... data) {
                 System.out.println("Received connection ID: <" + data[0] + ">");
+                connectionID = (int) data[0];
             }
         });
 
@@ -124,65 +133,23 @@ public class VastConnection {
 
                 System.out.println("Received publication from vast matcher: " + packet.packet.getClass().getSimpleName());
 
-//                Logger.log(SPSConnection.this, Logger.Level.DEBUG, new String[]{"connection","network", "publication", "counter"},"(publication) Amount of publications received: " + tempcounter_deleteme + ": " + packet.username + ": " + packet.packet.getClass().getSimpleName());
-
-//                if (Objects.equals(username, "Herobrine") && !Objects.equals(packet.packet.getClass().getSimpleName(),"ServerKeepAlivePacket") && ServerLoginSuccessPacketBehaviour.loginSuccess) { // Spatial Packets
-//                    playerSpecificPacketMap.put(packet.packet, packet);
-//                    Logger.log(SPSConnection.this, Logger.Level.DEBUG, new String[]{"connection","network", "publication", "herobrinePacket"},"(publication) SPSed Packet received: <" + packet.packet.getClass().getSimpleName() + ">");
-//                    if (!listeners.isEmpty()) {
-////						Logger.log(SPSConnection.this, Logger.Level.DEBUG, new String[]{"connection","network", "publication", "herobrinePacket"},"(publication) Sending packet <"+packet.packet.getClass().getSimpleName()+"> for player <"+listeners.values().iterator().next().getUsername()+"> at <"+x+":"+y+":"+radius+">");
-//
-//                        PacketSender.addClientboundPacket(packet.packet);
-//                        PacketSender.set_unique_id(packet.packet, unique_id);
-//                        DataCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketSender.get_unique_id(packet.packet), DataCapture.LogCategory.CLIENTBOUND_IN );
-//
-//                        listeners.values().iterator().next().packetReceived(packet.packet);
-//                    } else {
-//                        Logger.log(SPSConnection.this, Logger.Level.WARN, new String[]{"connection","network", "publication"},"No Listener connected to receive packet!");
-//                    }
-//                } else if (listeners.containsKey(username) || listeners.containsKey(packet.channel)) { // Player Specific Packets
-//                    playerSpecificPacketMap.put(packet.packet, packet);
-////					listeners.get(username).packetReceived(packet.packet);
-////					ConsoleIO.println("It would also seem that the listener used is a: " + listeners.get(username).getClass().getName());
-////					ConsoleIO.println("SPSConnection::publication => Sending packet <"+packet.packet.getClass().getSimpleName()+"> for player <"+username+"> at <"+x+":"+y+":"+radius+">");
-//
-//                    final Packet threadPacket = packet.packet;
-//                    if (listeners.get(username) == null) {
-//                        new Thread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                try {
-//                                    DataCapture.log("PRE_" + threadPacket.getClass().getSimpleName() + "_" + PacketSender.get_unique_id(threadPacket), DataCapture.LogCategory.UNKNOWN);
-//                                    sleep(1000);
-//                                    if (!listeners.isEmpty()) {
-//
-//                                        PacketSender.addClientboundPacket(packet.packet);
-//                                        PacketSender.set_unique_id(packet.packet, unique_id);
-//                                        DataCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketSender.get_unique_id(packet.packet), DataCapture.LogCategory.CLIENTBOUND_IN );
-//
-//                                        listeners.values().iterator().next().packetReceived(packet.packet);
-//                                    } else {
-//                                        DataCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketSender.get_unique_id(packet.packet), DataCapture.LogCategory.UNKNOWN);
-//                                    }
-//                                } catch (InterruptedException e) {
-//                                    throw new RuntimeException(e);
-//                                }
-//                            }
-//                        }).start();
-//                        return;
-//                    }
-//                    if (listeners.get(username) != null) {
-//
-//                        PacketSender.addClientboundPacket(packet.packet);
-//                        PacketSender.set_unique_id(packet.packet, unique_id);
-//                        DataCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketSender.get_unique_id(packet.packet), DataCapture.LogCategory.CLIENTBOUND_IN );
-//
-//                        listeners.get(username).packetReceived(packet.packet);
-//                    } else {
-//                        DataCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketSender.get_unique_id(packet.packet), DataCapture.LogCategory.UNKNOWN);
-//                    }
-//                } else if (!Objects.equals(username, "Herobrine")){
-//                    Logger.log(SPSConnection.this, Logger.Level.WARN, new String[]{"connection","network", "publication"},"Received a packet <" + packet.packet.getClass().getSimpleName() + "> for an unknown session <"+username+">" + " via channel <" + packet.channel + ">");
+//                System.out.println("clientInstance username: " + clientInstance.getUsername());
+//                if (packet.packet.getClass().getSimpleName().equals("LoginSuccessPacket")) {
+                    if (Objects.equals(username, "Herobrine") && !Objects.equals(packet.packet.getClass().getSimpleName(), "ServerKeepAlivePacket")) { // Spatial Packets
+                        if (clientInstance != null) {
+                            clientInstance.getPacketSender().addClientboundPacket(packet.packet);
+                            PacketWrapper.set_unique_id(packet.packet, unique_id);
+                        } else {
+                        }
+                    } else if ((clientInstance.getUsername().equals(username) || clientInstance.getUsername().equals(packet.channel))) { // Player Specific Packets
+                        clientInstance.getPacketSender().addClientboundPacket(packet.packet);
+                        PacketWrapper.set_unique_id(packet.packet, unique_id);
+                    } else {
+                        if (!Objects.equals(username, "Herobrine")) {
+                            //                    Logger.log(SPSConnection.this, Logger.Level.WARN, new String[]{"connection","network", "publication"},"Received a packet <" + packet.packet.getClass().getSimpleName() + "> for an unknown session <"+username+">" + " via channel <" + packet.channel + ">");
+                        }
+                        System.out.println("No destination for packet <" + packet.packet.getClass().getSimpleName() + "> for session <" + username + ">");
+                    }
 //                }
             }
         });
@@ -240,7 +207,7 @@ public class VastConnection {
 
 //        temp_pubcounter += 1;
 //        Logger.log(this, Logger.Level.DEBUG, new String[]{"counter", "clientPub"},"Amount of packets sent: " + temp_pubcounter + ": " + packet.packet.getClass().getSimpleName());
-        socket.emit("publish", 7, packet.username, 100, 100, 1000, json, packet.channel); // TODO: AOI - This should not be hard coded, this is also wack
+        socket.emit("publish", connectionID, packet.username, 100, 100, 1000, json, packet.channel); // TODO: AOI - This should not be hard coded, this is also wack
     }
 
 

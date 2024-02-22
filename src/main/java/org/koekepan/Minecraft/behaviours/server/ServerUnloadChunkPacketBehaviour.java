@@ -18,9 +18,9 @@ public class ServerUnloadChunkPacketBehaviour implements Behaviour<Packet> {
 //        clientInstance.sendPacketToClient(packet);
         PacketWrapper.setProcessed(packet, true);
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
                 ServerUnloadChunkPacket serverUnloadChunkPacket = (ServerUnloadChunkPacket) packet;
 
                 int chunkX = serverUnloadChunkPacket.getX();
@@ -37,8 +37,8 @@ public class ServerUnloadChunkPacketBehaviour implements Behaviour<Packet> {
 
 //                final ClientProxySession clientProxySession = (ClientProxySession) clientInstance;
                 SubscriptionAreaManager.removeChunkPosition(clientInstance, x1, z1);
-            }
-        }).start();
+//            }
+//        }).start();
 
 
     }

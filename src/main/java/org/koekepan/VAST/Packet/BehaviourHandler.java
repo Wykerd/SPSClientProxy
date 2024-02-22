@@ -42,6 +42,9 @@ public class BehaviourHandler<T> {
         if (behaviour != null) {
             behaviour.process(object);
         }
+        else {
+            System.out.println("No behaviour found for object of type: " + object.getClass().getName());
+        }
     }
 
     public void printBehaviours() {

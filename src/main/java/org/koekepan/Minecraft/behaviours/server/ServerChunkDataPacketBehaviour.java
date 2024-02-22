@@ -21,9 +21,8 @@ public class ServerChunkDataPacketBehaviour implements Behaviour<Packet> {
     public void process(final Packet packet) {
 //        clientInstance.sendPacketToClient(packet);
         PacketWrapper.setProcessed(packet, true);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+
+//        new Thread(() -> {
                 ServerChunkDataPacket serverChunkDataPacket = (ServerChunkDataPacket) packet;
 
                 int chunkX = serverChunkDataPacket.getColumn().getX();
@@ -37,7 +36,7 @@ public class ServerChunkDataPacketBehaviour implements Behaviour<Packet> {
                 int x1 = blockX;
                 int z1 = blockZ;
 //                Logger.log(this, Logger.Level.DEBUG, new String[]{"behaviour","network"},"Packet received for chunk with x,y: (" + x1 + ", " + z1 + ")");
-                System.out.println("Received chunk packet for chunk with x,y: (" + x1 + ", " + z1 + ")");
+//                System.out.println("Received chunk packet for chunk with x,y: (" + x1 + ", " + z1 + ")");
 
 
                 SubscriptionAreaManager.receiveChunkPosition( clientInstance, new ChunkPosition(x1, z1));
@@ -46,10 +45,7 @@ public class ServerChunkDataPacketBehaviour implements Behaviour<Packet> {
                 if (isolatedPositions != null) {
                     clientInstance.getVastConnection().subscribePolygon(isolatedPositions);
                 }
-
-
-            }
-        }).start();
+//        }).start();
     }
 
 }

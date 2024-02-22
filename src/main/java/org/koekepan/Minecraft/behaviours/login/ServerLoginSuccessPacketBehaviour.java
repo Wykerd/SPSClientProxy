@@ -28,12 +28,20 @@ public class ServerLoginSuccessPacketBehaviour implements Behaviour<Packet> {
 
 	@Override
 	public void process(Packet packet) {
-//		clientInstance.sendPacketToClient(packet);
-		PacketWrapper.setProcessed(packet, true);
-//		loginSuccess = true;
+
+		// Send immediately to client
+		System.out.println("ServerLoginSuccessPacketBehaviour::process => Processing ServerLoginSuccessPacket");
+
+
+//		PacketWrapper.setProcessed(packet, true);
+
 		loginPacket = packet;
 		LoginSuccessPacket loginSuccessPacket = (LoginSuccessPacket)packet;
-//		Logger.log(this, Logger.Level.INFO, new String[]{"network", "behaviour", "initialisation"} ,"Player \""+loginSuccessPacket.getProfile().getName()+"\" has successfully logged into the server");
-		System.out.println("Player \""+loginSuccessPacket.getProfile().getName()+"\" has successfully logged into the server");
+
+
+//		clientInstance.getSession().send(loginSuccessPacket);
+		clientInstance.getPacketSender().removePacket(packet);
+
+		System.out.println("Player \""+loginSuccessPacket.getProfile().getName()+"\" has successfully logged into the remote server");
 	}
 }
