@@ -142,19 +142,19 @@ public class VastConnection {
 
 //                System.out.println("clientInstance username: " + clientInstance.getUsername());
 //                if (packet.packet.getClass().getSimpleName().equals("LoginSuccessPacket")) {
-                if (packet.channel.equals("clientBound") && !Objects.equals(packet.packet.getClass().getSimpleName(), "ServerKeepAlivePacket")) { // Spatial Packets
-                    if (clientInstance != null) {
-                        clientInstance.getPacketSender().addClientboundPacket(packet.packet);
-                        PacketWrapper.set_unique_id(packet.packet, unique_id);
-                        PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
-                    } else {
-                    }
-                } else if (packet.channel.equals(clientInstance.getUsername())) { // Player Specific Packets
+                if (packet.channel.equals(clientInstance.getUsername())) { // Player Specific Packets
                     clientInstance.getPacketSender().addClientboundPacket(packet.packet);
                     PacketWrapper.set_unique_id(packet.packet, unique_id);
                     PacketWrapper.setPlayerSpecific(packet.packet, username);
                     PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
                     System.out.println("set player specific for packet <" + packet.packet.getClass().getSimpleName() + "> for username: <" + username + "> and channel: <" + packet.channel + ">");
+                } else if (packet.channel.equals("clientBound") && !Objects.equals(packet.packet.getClass().getSimpleName(), "ServerKeepAlivePacket")) {
+                     if (clientInstance != null) {
+                         clientInstance.getPacketSender().addClientboundPacket(packet.packet);
+                         PacketWrapper.set_unique_id(packet.packet, unique_id);
+                         PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
+                     } else {
+                     }
                 } else {
                     if (!Objects.equals(username, "Herobrine")) {
 //                    Logger.log(SPSConnection.this, Logger.Level.WARN, new String[]{"connection","network", "publication"},"Received a packet <" + packet.packet.getClass().getSimpleName() + "> for an unknown session <"+username+">" + " via channel <" + packet.channel + ">");
