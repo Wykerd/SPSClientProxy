@@ -5,15 +5,14 @@ import org.koekepan.Minecraft.behaviours.ClientBoundPacketBehaviours;
 import org.koekepan.Minecraft.behaviours.ServerBoundPacketBehaviours;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 
-import java.util.ArrayDeque;
+
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 
 public class PacketHandler implements Runnable {
 
-    Deque<PacketWrapper> packetQueue = new ArrayDeque<PacketWrapper>();
-    BehaviourHandler<Packet> behaviourHandler = new BehaviourHandler<Packet>();
+//    Deque<PacketWrapper> packetQueue = new ArrayDeque<PacketWrapper>();
+    BehaviourHandler<Packet> behaviourHandler;
     List<Thread> threads = new ArrayList<>(); // List to store all threads
 
 
