@@ -39,6 +39,9 @@ public class PacketSender implements Runnable { // This is the packet sender, it
         startClientSender();
     }
 
+    private ScheduledExecutorService packetExecutor;
+    private ScheduledExecutorService packetExecutor2;
+
     public void startServerSender() {
         this.serverSender = new ServerSender(this, clientInstances_PacketSenders.get(this).getVastConnection());
         ScheduledExecutorService packetExecutor;
@@ -51,6 +54,20 @@ public class PacketSender implements Runnable { // This is the packet sender, it
         ScheduledExecutorService packetExecutor2;
         packetExecutor2 = Executors.newSingleThreadScheduledExecutor();
         packetExecutor2.scheduleAtFixedRate(clientSender, 0, 1, TimeUnit.MILLISECONDS);
+    }
+
+    public void stopServerSender() {
+        if (packetExecutor != null) {
+            packetExecutor.shutdown();
+            packetExecutor = null;
+        }
+    }
+
+    public void stopClientSender() {
+        if (packetExecutor2 != null) {
+            packetExecutor2.shutdown();
+            packetExecutor2 = null;
+        }
     }
 
     public void addClientboundPacket(Packet packet) {
@@ -196,5 +213,13 @@ public class PacketSender implements Runnable { // This is the packet sender, it
             }
         }
         PacketWrapper.removePacketWrapper(packet);
+    }
+
+    public void stop() {
+        stopServerSender();
+        stopClientSender();
+        clientboundPacketQueue.clear();
+        serverboundPacketQueue.clear();
+//        packetWrapperMap.clear();
     }
 }

@@ -6,12 +6,16 @@ import org.koekepan.Minecraft.behaviours.ServerBoundPacketBehaviours;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 
 public class PacketHandler implements Runnable {
 
     Deque<PacketWrapper> packetQueue = new ArrayDeque<PacketWrapper>();
     BehaviourHandler<Packet> behaviourHandler = new BehaviourHandler<Packet>();
+    List<Thread> threads = new ArrayList<>(); // List to store all threads
+
 
     public PacketHandler(ClientConnectedInstance clientInstance) {
         this.behaviourHandler = new BehaviourHandler<Packet>();
@@ -28,15 +32,15 @@ public class PacketHandler implements Runnable {
     }
 
     public void addPacket(PacketWrapper packetWrapper) {
-
-//        packetQueue.add(packetWrapper);
         if (packetWrapper != null) {
             if (!packetWrapper.isProcessed) {
                 Packet packet = packetWrapper.getPacket();
                 if (packet != null) {
-                    new Thread(() -> {
+                    Thread thread = new Thread(() -> {
                         this.behaviourHandler.process(packet);
-                    }).start();
+                    });
+                    thread.start();
+                    threads.add(thread); // Add the thread to the list
                 } else {
                     System.out.println("PacketHandler::addPacket => Packet is null");
                 }
@@ -46,10 +50,7 @@ public class PacketHandler implements Runnable {
         } else {
             System.out.println("PacketHandler::addPacket => PacketWrapper is null");
         }
-
-
     }
-
     public void setBehaviours(BehaviourHandler<Packet> behaviourHandler) {
         this.behaviourHandler = behaviourHandler;
     }
@@ -91,5 +92,13 @@ public class PacketHandler implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void stop() {
+        // Stop all threads
+        for (Thread thread : threads) {
+            thread.interrupt();
+        }
+        threads.clear(); // Clear the list
     }
 }

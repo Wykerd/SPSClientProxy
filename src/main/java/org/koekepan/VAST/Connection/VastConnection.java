@@ -38,6 +38,12 @@ public class VastConnection {
         this.clientInstance = clientInstance;
     }
 
+    public void disconnect() {
+        socket.emit("disconnect_client", connectionID);
+//        socket.emit("disconnect", connectionID);
+        socket.disconnect();
+    }
+
     private boolean initialiseConnection() {
         final CompletableFuture<Boolean> completableFuture = new CompletableFuture<>();
         final boolean[] result = {false};

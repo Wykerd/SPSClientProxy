@@ -80,6 +80,7 @@ public class App
             @Override
             public void sessionRemoved(SessionRemovedEvent sessionRemovedEvent) {
                 System.out.println("Session removed: " + sessionRemovedEvent.getSession().getHost() + ":" + sessionRemovedEvent.getSession().getPort());
+                clientInstances.get(sessionRemovedEvent.getSession()).disconnect();
             }
         });
 
