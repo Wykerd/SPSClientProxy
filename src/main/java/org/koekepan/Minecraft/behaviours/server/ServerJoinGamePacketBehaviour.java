@@ -3,6 +3,7 @@ package org.koekepan.Minecraft.behaviours.server;
 import com.github.steveice10.mc.protocol.packet.ingame.server.ServerJoinGamePacket;
 import com.github.steveice10.packetlib.packet.Packet;
 
+import org.koekepan.Performance.PacketCapture;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 import org.koekepan.VAST.Packet.Behaviour;
 import org.koekepan.VAST.Packet.PacketWrapper;
@@ -40,6 +41,7 @@ public class ServerJoinGamePacketBehaviour implements Behaviour<Packet> {
 
 //		PacketWrapper.setProcessed(packet, true);
 		clientInstance.getSession().send(packet);
+		PacketCapture.log(packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet), PacketCapture.LogCategory.CLIENTBOUND_OUT);
 		clientInstance.getPacketSender().removePacket(packet);
 
 		clientInstance.getPacketSender().startClientSender();

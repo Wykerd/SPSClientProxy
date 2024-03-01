@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.koekepan.App;
 import org.koekepan.Minecraft.ChunkPosition;
+import org.koekepan.Performance.PacketCapture;
 import org.koekepan.VAST.Packet.PacketWrapper;
 import org.koekepan.VAST.Packet.SPSPacket;
 
@@ -145,12 +146,14 @@ public class VastConnection {
                     if (clientInstance != null) {
                         clientInstance.getPacketSender().addClientboundPacket(packet.packet);
                         PacketWrapper.set_unique_id(packet.packet, unique_id);
+                        PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
                     } else {
                     }
                 } else if (packet.channel.equals(clientInstance.getUsername())) { // Player Specific Packets
                     clientInstance.getPacketSender().addClientboundPacket(packet.packet);
                     PacketWrapper.set_unique_id(packet.packet, unique_id);
                     PacketWrapper.setPlayerSpecific(packet.packet, username);
+                    PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
                     System.out.println("set player specific for packet <" + packet.packet.getClass().getSimpleName() + "> for username: <" + username + "> and channel: <" + packet.channel + ">");
                 } else {
                     if (!Objects.equals(username, "Herobrine")) {
