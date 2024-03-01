@@ -129,7 +129,8 @@ public class ServerSender implements Runnable{
 
                             if (wrapper != null) {
                                 try {
-                                    packetSender.removePacket(packetSender.serverboundPacketQueue.get(queueNumberServerbound).getPacket());
+                                    System.out.println("ServerSender.run: <TIMED OUT> (clientbound) Wrapper is: " + wrapper.getPacket().getClass().getSimpleName() + " and isProcessed: " + wrapper.isProcessed);
+                                    packetSender.removePacket(wrapper.getPacket());
                                     queueNumberServerbound++;
                                 } catch (Exception e) {
                                     System.out.println("Error removing packet: " + e.getMessage());

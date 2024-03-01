@@ -43,12 +43,8 @@ public class ClientSender implements Runnable{
                 if (currentTime - timeAdded > 20) { // TODO: Change back to 100 when problem found (could be 50) - This if seems to break the system?
                     if (clientboundPacketQueueContainsKey) {
 //                        System.out.println("PacketSender.run: <TIMED OUT> (clientbound) 1");
-                        if (wrapper == null) {
-                            System.out.println("PacketSender.run: <TIMED OUT> (clientbound) 2");
-                            break;
-                        }
                         if (!wrapper.getPacket().getClass().getSimpleName().equals("ServerChunkDataPacket")) {
-                            System.out.println("PacketSender.run: <TIMED OUT> (clientbound) Wrapper is: " + wrapper.getPacket().getClass().getSimpleName() + " and isProcessed: " + wrapper.isProcessed);
+                            System.out.println("ClientSender.run: <TIMED OUT> (clientbound) Wrapper is: " + wrapper.getPacket().getClass().getSimpleName() + " and isProcessed: " + wrapper.isProcessed);
                             packetSender.removePacket(wrapper.getPacket());
                             queueNumberClientbound++;
                         }
