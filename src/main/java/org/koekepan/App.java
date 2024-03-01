@@ -15,14 +15,16 @@ import java.util.HashMap;
 
 public class App 
 {
+    static AppConfig config = new AppConfig();
+//    config.loadProperties();
 
     // This is the server ip/port that the proxy will listen on (aka the server that is emulated)
-    static String host = "localhost";
-    static int port = 25565;
+    static String host = config.getHost();
+    static int port = config.getPort();
 
     // This is the VAST_COM ip/port that the proxy will connect to (aka the sps client)
-    static String vastHost = "localhost";
-    static int vastPort = 3456;
+    static String vastHost = config.getVastHost();
+    static int vastPort = config.getVastPort();
 
     private static VastConnection vastConnection;
 
