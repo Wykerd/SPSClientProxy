@@ -34,6 +34,7 @@ import com.github.steveice10.mc.protocol.packet.login.client.EncryptionResponseP
 import com.github.steveice10.mc.protocol.packet.status.client.StatusPingPacket;
 import com.github.steveice10.mc.protocol.packet.status.client.StatusQueryPacket;
 import com.github.steveice10.packetlib.packet.Packet;
+import org.koekepan.Minecraft.behaviours.client.ClientPlayerMovementPacketBehaviour;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 import org.koekepan.VAST.CustomPackets.EstablishConnectionPacket;
 import org.koekepan.VAST.Packet.BehaviourHandler;
@@ -85,8 +86,10 @@ public class ServerBoundPacketBehaviours extends BehaviourHandler<Packet> {
 		registerBehaviour(ClientPluginMessagePacket.class, serverForwarder);
 		registerBehaviour(ClientPlayerInteractEntityPacket.class, serverForwarder);
 		registerBehaviour(ClientKeepAlivePacket.class, serverForwarder);
-		registerBehaviour(ClientPlayerPositionPacket.class, serverForwarder);
-		registerBehaviour(ClientPlayerPositionRotationPacket.class, serverForwarder);
+
+		registerBehaviour(ClientPlayerPositionPacket.class, 			new ClientPlayerMovementPacketBehaviour(clientInstance));
+		registerBehaviour(ClientPlayerPositionRotationPacket.class, 	new ClientPlayerMovementPacketBehaviour(clientInstance));
+
 		registerBehaviour(ClientPlayerRotationPacket.class, serverForwarder);
 		registerBehaviour(ClientPlayerMovementPacket.class, serverForwarder);
 		registerBehaviour(ClientVehicleMovePacket.class, serverForwarder);

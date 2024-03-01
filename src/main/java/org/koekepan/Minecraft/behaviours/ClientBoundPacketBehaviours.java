@@ -120,13 +120,14 @@ public class ClientBoundPacketBehaviours extends BehaviourHandler<Packet> {
 		registerBehaviour(ServerSwitchCameraPacket.class, clientForwarder);
 		registerBehaviour(ServerPlayerChangeHeldItemPacket.class, clientForwarder);
 		registerBehaviour(ServerDisplayScoreboardPacket.class, clientForwarder);
+		registerBehaviour(ServerDisplayScoreboardPacket.class, clientForwarder);
 		registerBehaviour(ServerEntityMetadataPacket.class, clientForwarder);
 		registerBehaviour(ServerEntityAttachPacket.class, clientForwarder);
 
 		registerBehaviour(ServerEntityVelocityPacket.class, 		new ServerEntityVelocityPacketBehaviour(clientInstance));
 		registerBehaviour(ServerEntityEquipmentPacket.class, 		new ServerEntityEquipmentPacketBehaviour(clientInstance));
 
-		registerBehaviour(ServerPlayerPositionRotationPacket.class, clientForwarder);
+		registerBehaviour(ServerPlayerPositionRotationPacket.class, new ServerPlayerPositionPacketBehaviour(clientInstance));
 		registerBehaviour(ServerPlayerSetExperiencePacket.class, clientForwarder);
 		registerBehaviour(ServerPlayerHealthPacket.class, clientForwarder);
 		registerBehaviour(ServerScoreboardObjectivePacket.class, clientForwarder);

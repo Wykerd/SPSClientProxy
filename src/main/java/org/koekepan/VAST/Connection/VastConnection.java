@@ -137,25 +137,27 @@ public class VastConnection {
                 int y = packet.y;
                 int radius = packet.radius;
 
-                System.out.println("Received publication from vast matcher: " + packet.packet.getClass().getSimpleName());
+                System.out.println(clientInstance.getUsername() + " received publication from vast matcher: <" + packet.packet.getClass().getSimpleName() + "> username: <" + username + "> channel: <" + packet.channel + ">");
 
 //                System.out.println("clientInstance username: " + clientInstance.getUsername());
 //                if (packet.packet.getClass().getSimpleName().equals("LoginSuccessPacket")) {
-                    if (Objects.equals(username, "Herobrine") && !Objects.equals(packet.packet.getClass().getSimpleName(), "ServerKeepAlivePacket")) { // Spatial Packets
-                        if (clientInstance != null) {
-                            clientInstance.getPacketSender().addClientboundPacket(packet.packet);
-                            PacketWrapper.set_unique_id(packet.packet, unique_id);
-                        } else {
-                        }
-                    } else if ((clientInstance.getUsername().equals(username) || clientInstance.getUsername().equals(packet.channel))) { // Player Specific Packets
+                if (packet.channel.equals("clientBound") && !Objects.equals(packet.packet.getClass().getSimpleName(), "ServerKeepAlivePacket")) { // Spatial Packets
+                    if (clientInstance != null) {
                         clientInstance.getPacketSender().addClientboundPacket(packet.packet);
                         PacketWrapper.set_unique_id(packet.packet, unique_id);
                     } else {
-                        if (!Objects.equals(username, "Herobrine")) {
-                            //                    Logger.log(SPSConnection.this, Logger.Level.WARN, new String[]{"connection","network", "publication"},"Received a packet <" + packet.packet.getClass().getSimpleName() + "> for an unknown session <"+username+">" + " via channel <" + packet.channel + ">");
-                        }
-                        System.out.println("No destination for packet <" + packet.packet.getClass().getSimpleName() + "> for session <" + username + ">");
                     }
+                } else if (packet.channel.equals(clientInstance.getUsername())) { // Player Specific Packets
+                    clientInstance.getPacketSender().addClientboundPacket(packet.packet);
+                    PacketWrapper.set_unique_id(packet.packet, unique_id);
+                    PacketWrapper.setPlayerSpecific(packet.packet, username);
+                    System.out.println("set player specific for packet <" + packet.packet.getClass().getSimpleName() + "> for username: <" + username + "> and channel: <" + packet.channel + ">");
+                } else {
+                    if (!Objects.equals(username, "Herobrine")) {
+//                    Logger.log(SPSConnection.this, Logger.Level.WARN, new String[]{"connection","network", "publication"},"Received a packet <" + packet.packet.getClass().getSimpleName() + "> for an unknown session <"+username+">" + " via channel <" + packet.channel + ">");
+                    }
+                    System.out.println("No destination for packet <" + packet.packet.getClass().getSimpleName() + "> for session <" + username + ">");
+                }
 //                }
             }
         });
@@ -166,14 +168,7 @@ public class VastConnection {
     }
 
     public void subscribe(int x, int z, int aoi, String channel) {
-        if (channel == null) {
-            socket.emit("subscribe", x, z, aoi, "clientBound");
-//            if (!listeners.isEmpty()) {
-//                socket.emit("subscribe", x, z, aoi, listeners.values().iterator().next().getUsername());
-//            }
-        } else {
-            socket.emit("subscribe", x, z, aoi, channel);
-        }
+        socket.emit("subscribe", x, z, aoi, channel == null ? "clientBound" : channel);
     }
 
     public void subscribePolygon(List<ChunkPosition> positions){
@@ -197,8 +192,23 @@ public class VastConnection {
 
     }
 
-    public void unsubscribed(String channel) {
+    public void unsubscribe(String channel) {
         socket.emit("clearsubscriptions", channel);
+    }
+
+    public void subscribeMobile(int x, int y, int aoi, String channel) {
+        socket.emit("subscribe_mobile", x, y, aoi, channel);
+    }
+
+    public void subscribeMobilePolygon(List<ChunkPosition> positions, String channel) {
+        List<float[]> posList = new ArrayList<float[]>();
+        for (ChunkPosition position : positions) {
+            posList.add(new float[]{position.getX(), position.getZ()});
+        }
+
+        String jsonPositions = new Gson().toJson(posList);
+
+        socket.emit("subscribe_mobile_polygon", jsonPositions, channel);
     }
 
     public void publish(SPSPacket packet) { // sends to vast matcher as client
@@ -217,4 +227,9 @@ public class VastConnection {
     }
 
 
+    public void publishMove(int x, int y) {
+        int x_position = x;
+        int z_position = y;
+        socket.emit("move", x_position, z_position);
+    }
 }

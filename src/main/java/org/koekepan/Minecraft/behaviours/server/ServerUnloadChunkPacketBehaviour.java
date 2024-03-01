@@ -36,7 +36,7 @@ public class ServerUnloadChunkPacketBehaviour implements Behaviour<Packet> {
 //        System.out.println("Packet received for unload-chunk with x,y: (" + x1 + ", " + z1 + ")");
 
 //                final ClientProxySession clientProxySession = (ClientProxySession) clientInstance;
-                SubscriptionAreaManager.removeChunkPosition(clientInstance, x1, z1);
+//                SubscriptionAreaManager.removeChunkPosition(clientInstance, x1, z1);
 //            }
 //        }).start();
 
