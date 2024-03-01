@@ -20,19 +20,24 @@ public class ClientSender implements Runnable{
     public void run() {
         try {
             long timeAdded = System.currentTimeMillis();
-            int queueNumberClientboundLast = packetSender.queueNumberClientboundLast;
 
             while (!packetSender.clientboundPacketQueue.isEmpty()) {
+                int queueNumberClientboundLast = packetSender.queueNumberClientboundLast;
                 boolean clientboundPacketQueueContainsKey = packetSender.clientboundPacketQueue.containsKey(queueNumberClientbound);
                 PacketWrapper wrapper = null;
 
+//                System.out.println("ClientSender.run: packetSender.clientboundPacketQueue.size() = " + packetSender.clientboundPacketQueue.size() + " and queueNumberClientbound = " + queueNumberClientbound + " and clientboundPacketQueueContainsKey = " + clientboundPacketQueueContainsKey + " and clientboundPacketQueueContainsKey = " + clientboundPacketQueueContainsKey + " clientboundpacketqueuelast = " + queueNumberClientboundLast);
+
                 if (clientboundPacketQueueContainsKey) {
                     wrapper = PacketWrapper.getPacketWrapperByQueueNumber(packetSender.clientboundPacketQueue, queueNumberClientbound);
+
+//                    System.out.println("ClientSender.run: wrapper = <" + wrapper.getPacket().getClass().getSimpleName() + "> and isProcessed = " + wrapper.isProcessed);
+
                     if (wrapper != null && wrapper.isProcessed && this.clientSession != null) {
 
                         this.clientSession.send(wrapper.getPacket());
                         PacketCapture.log(wrapper.getPacket().getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(wrapper.getPacket()), PacketCapture.LogCategory.CLIENTBOUND_OUT);
-//                        System.out.println("PacketSender.run: " + wrapper.getPacket().getClass().getSimpleName() + " sent to client: " + clientInstances_PacketSenders.get(this.packetSender).getUsername());
+//                        System.out.println("ClientSender.run: " + wrapper.getPacket().getClass().getSimpleName() + " sent to client: " + clientInstances_PacketSenders.get(this.packetSender).getUsername());
 
                         packetSender.removePacket(wrapper.getPacket());
                         timeAdded = System.currentTimeMillis(); // Reset time after sending a packet
@@ -58,8 +63,10 @@ public class ClientSender implements Runnable{
                 if (!packetSender.clientboundPacketQueue.containsKey(queueNumberClientbound) && queueNumberClientbound <= queueNumberClientboundLast) {
                     while (!packetSender.clientboundPacketQueue.containsKey(queueNumberClientbound)) {
                         queueNumberClientbound++;
+//                        System.out.println("ClientSender.run: <INCREMENT> (clientbound) 1");
                         // Check if queueNumberClientbound has reached or exceeded the last queue number
                         if (queueNumberClientbound > queueNumberClientboundLast) {
+//                            System.out.println("ClientSender.run: <BREAK> (clientbound) 1");
                             break; // Exit the loop if we have reached the end of the queue
                         }
                     }
