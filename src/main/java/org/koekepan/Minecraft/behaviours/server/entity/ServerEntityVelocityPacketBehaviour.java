@@ -28,9 +28,9 @@ public class ServerEntityVelocityPacketBehaviour implements Behaviour<Packet> {
             PacketWrapper.setProcessed(packet, true);
         } else {
             PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
-            if (packetWrapper.PlayerSpecific() != null){
+            if (packetWrapper.getPlayerSpecific() != null){
 
-                if (packetWrapper.PlayerSpecific().equals(clientInstance.getUsername())){
+                if (packetWrapper.getPlayerSpecific().equals(clientInstance.getUsername())){
 //                clientInstance.sendPacketToClient(packet);
                     PacketWrapper.setProcessed(packet, true);
                 } else {
@@ -41,6 +41,9 @@ public class ServerEntityVelocityPacketBehaviour implements Behaviour<Packet> {
                     return;
                 }
                 return;
+            } else {
+                clientInstance.getPacketSender().removePacket(packet);
+                System.out.println("ServerEntityVelocityPacket not forwarded to client, because it is not player specific.");
             }
         }
     }

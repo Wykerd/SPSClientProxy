@@ -44,14 +44,12 @@ public class PacketSender implements Runnable { // This is the packet sender, it
 
     public void startServerSender() {
         this.serverSender = new ServerSender(this, clientInstances_PacketSenders.get(this).getVastConnection());
-        ScheduledExecutorService packetExecutor;
         packetExecutor = Executors.newSingleThreadScheduledExecutor();
         packetExecutor.scheduleAtFixedRate(serverSender, 0, 1, TimeUnit.MILLISECONDS);
     }
 
     public void startClientSender() {
         this.clientSender = new ClientSender(this, this.clientSession);
-        ScheduledExecutorService packetExecutor2;
         packetExecutor2 = Executors.newSingleThreadScheduledExecutor();
         packetExecutor2.scheduleAtFixedRate(clientSender, 0, 1, TimeUnit.MILLISECONDS);
     }
@@ -88,14 +86,14 @@ public class PacketSender implements Runnable { // This is the packet sender, it
     public void addServerboundPacket(Packet packet) {
         PacketWrapper packetWrapper = new PacketWrapper(packet);
         packetWrapper.clientBound = false;
+        packetWrapperMap.put(packet, packetWrapper);
 
         clientInstances_PacketSenders.get(this).getPacketHandler().addPacket(packetWrapper);
 
 //        System.out.println("PacketSender.addServerboundPacket: " + packet.getClass().getSimpleName());
-        serverboundPacketQueue.put(++queueNumberServerboundLast, packetWrapper);
-        packetWrapper.queueNumber = queueNumberServerboundLast;
+        packetWrapper.queueNumber = ++queueNumberServerboundLast;
         packetWrapper.unique_id = "SB" + UUID.randomUUID().toString().substring(0, 4) + queueNumberServerboundLast;
-        packetWrapperMap.put(packet, packetWrapper);
+        serverboundPacketQueue.put(queueNumberServerboundLast, packetWrapper);
     }
 
     public void setClientSession(Session session) {

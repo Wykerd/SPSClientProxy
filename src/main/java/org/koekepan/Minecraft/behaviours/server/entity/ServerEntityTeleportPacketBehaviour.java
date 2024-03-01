@@ -32,9 +32,9 @@ public class ServerEntityTeleportPacketBehaviour implements Behaviour<Packet> {
             return;
         } else {
             PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
-            if (packetWrapper.PlayerSpecific() != null){
+            if (packetWrapper.getPlayerSpecific() != null){
 
-                if (packetWrapper.PlayerSpecific().equals(clientInstance.getUsername())){
+                if (packetWrapper.getPlayerSpecific().equals(clientInstance.getUsername())){
                     PacketWrapper.setProcessed(packet, true);
 //                    clientInstance.sendPacketToClient(packet);
                 } else {
@@ -46,6 +46,9 @@ public class ServerEntityTeleportPacketBehaviour implements Behaviour<Packet> {
                     return;
                 }
                 return;
+            } else {
+                System.out.println("EntityTeleport not forwarded to client because it is not player specific.");
+                clientInstance.getPacketSender().removePacket(packet);
             }
         }
 

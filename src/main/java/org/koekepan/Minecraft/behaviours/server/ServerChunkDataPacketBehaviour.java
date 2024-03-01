@@ -39,12 +39,13 @@ public class ServerChunkDataPacketBehaviour implements Behaviour<Packet> {
 //                System.out.println("Received chunk packet for chunk with x,y: (" + x1 + ", " + z1 + ")");
 
 
-                SubscriptionAreaManager.receiveChunkPosition( clientInstance, new ChunkPosition(x1, z1));
+//                SubscriptionAreaManager.receiveChunkPosition( clientInstance, new ChunkPosition(x1, z1));
+//
+//                List<ChunkPosition> isolatedPositions = SubscriptionAreaManager.updateIsolatedPositions(clientInstance);
+//                if (isolatedPositions != null) {
+//                    clientInstance.getVastConnection().subscribePolygon(isolatedPositions);
+//                }
 
-                List<ChunkPosition> isolatedPositions = SubscriptionAreaManager.updateIsolatedPositions(clientInstance);
-                if (isolatedPositions != null) {
-                    clientInstance.getVastConnection().subscribePolygon(isolatedPositions);
-                }
 //        }).start();
     }
 

@@ -33,18 +33,28 @@ public class ForwardPacketBehaviour implements Behaviour<Packet> {
 			}
 			else {
 				//sleep for 5ms
-				try {
-					Thread.sleep(10); // Sometimes the packet wrapper is not set yet, so we sleep for a bit and try again
-					packetWrapper = PacketWrapper.getPacketWrapper(packet);
-					packetWrapper.setSPSPacket(spsPacket);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
+                new Thread() {
+                    @Override
+                    public void run() {
+                        try {
+                            Thread.sleep(50);
+                            PacketWrapper packetWrapper2 = PacketWrapper.getPacketWrapper(packet);
+                            packetWrapper2.setSPSPacket(spsPacket);
+                        } catch (InterruptedException e) {
+							System.out.println("ForwardPacketBehaviour for packet: <" + packet.getClass().getSimpleName() + "> failed getting packetWrapper: <" + e.getMessage() + ">");
+//                            e.printStackTrace();
+                        }
+                    }
+                }.start();
+            }
 		}
 //		else {
 //			clientInstance.getPacketSender().addClientboundPacket(packet);
 //		}
-		PacketWrapper.setProcessed(packet, true); // Server/Clientbound packets are assigned in ClientConnectedInstance and on Vast Publication
+		try {
+			PacketWrapper.setProcessed(packet, true); // Server/Clientbound packets are assigned in ClientConnectedInstance and on Vast Publication
+		} catch (Exception e) {
+			System.out.println("ForwardPacketBehaviour for packet: <" + packet.getClass().getSimpleName() + "> failed setting processed: <" + e.getMessage() + ">");
+		}
 	}
 }

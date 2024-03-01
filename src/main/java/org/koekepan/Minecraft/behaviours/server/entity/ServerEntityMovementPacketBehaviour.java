@@ -36,15 +36,18 @@ public class ServerEntityMovementPacketBehaviour implements Behaviour<Packet> {
             return;
         } else {
             PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
-            if (packetWrapper.PlayerSpecific() != null){
+            if (packetWrapper.getPlayerSpecific() != null){
 
-                if (packetWrapper.PlayerSpecific().equals(clientInstance.getUsername())){
+                if (packetWrapper.getPlayerSpecific().equals(clientInstance.getUsername())){
                     PacketWrapper.setProcessed(packet, true);
                 } else {
                     clientInstance.getPacketSender().removePacket(packet);
                     return;
                 }
                 return;
+            } else {
+                clientInstance.getPacketSender().removePacket(packet);
+                System.out.println("ServerEntityMovementPacket not forwarded to client, because it is not player specific.");
             }
         }
     }

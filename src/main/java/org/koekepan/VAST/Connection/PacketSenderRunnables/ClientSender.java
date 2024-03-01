@@ -30,7 +30,7 @@ public class ClientSender implements Runnable{
                     if (wrapper != null && wrapper.isProcessed && this.clientSession != null) {
 
                         this.clientSession.send(wrapper.getPacket());
-                        System.out.println("PacketSender.run: " + wrapper.getPacket().getClass().getSimpleName() + " sent to client");
+//                        System.out.println("PacketSender.run: " + wrapper.getPacket().getClass().getSimpleName() + " sent to client: " + clientInstances_PacketSenders.get(this.packetSender).getUsername());
 
                         packetSender.removePacket(wrapper.getPacket());
                         timeAdded = System.currentTimeMillis(); // Reset time after sending a packet
@@ -40,9 +40,9 @@ public class ClientSender implements Runnable{
 
                 // Handle timeout for both queues
                 long currentTime = System.currentTimeMillis();
-                if (currentTime - timeAdded > 50) { // TODO: Change back to 100 when problem found (could be 50) - This if seems to break the system?
+                if (currentTime - timeAdded > 20) { // TODO: Change back to 100 when problem found (could be 50) - This if seems to break the system?
                     if (clientboundPacketQueueContainsKey) {
-                        System.out.println("PacketSender.run: <TIMED OUT> (clientbound) 1");
+//                        System.out.println("PacketSender.run: <TIMED OUT> (clientbound) 1");
                         if (wrapper == null) {
                             System.out.println("PacketSender.run: <TIMED OUT> (clientbound) 2");
                             break;

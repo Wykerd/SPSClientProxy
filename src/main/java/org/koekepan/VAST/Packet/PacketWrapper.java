@@ -15,7 +15,7 @@ public class PacketWrapper {
     private Packet packet;
     public boolean isProcessed = false;
     public boolean clientBound = false;
-    private String PlayerSpecific = null;
+    private String playerSpecific = null;
 
     public PacketWrapper(SPSPacket spsPacket) {
 
@@ -36,6 +36,13 @@ public class PacketWrapper {
         this.isProcessed = isProcessed;
     }
 
+    public static void setPlayerSpecific(Packet packet, String username) {
+        PacketWrapper packetWrapper = packetWrapperMap.get(packet);
+        if (packetWrapper != null) {
+            packetWrapper.setPlayerSpecific(username);
+        }
+    }
+
     public SPSPacket getSPSPacket() {
         return spsPacket;
     }
@@ -53,11 +60,11 @@ public class PacketWrapper {
     }
 
     public void setPlayerSpecific(String PlayerSpecific) {
-        this.PlayerSpecific = PlayerSpecific;
+        this.playerSpecific = PlayerSpecific;
     }
 
-    public String PlayerSpecific() {
-        return PlayerSpecific;
+    public String getPlayerSpecific() {
+        return playerSpecific;
     }
 
     public static int get_QueueNumber(Packet packet) {
@@ -84,7 +91,13 @@ public class PacketWrapper {
     }
 
     public static PacketWrapper getPacketWrapper(Packet packet) {
-        return packetWrapperMap.get(packet);
+        PacketWrapper packetWrapper = null;
+        try {
+            packetWrapper = packetWrapperMap.get(packet);
+        } catch (Exception e) {
+            System.out.println("PacketWrapper::getPacketWrapper => PacketWrapper is null! Packet: " + packet.getClass().getSimpleName());
+        }
+        return packetWrapper;
     }
 
     public static PacketWrapper getPacketWrapperByQueueNumber(ConcurrentHashMap<Integer, PacketWrapper> map, int queueNumber) {
@@ -96,7 +109,20 @@ public class PacketWrapper {
         if (packetWrapper != null) {
             packetWrapper.isProcessed = isProcessed;
         } else {
-            System.out.println("PacketWrapper::setProcessed => PacketWrapper is null!");
+            new Thread(() -> {
+                try {
+                    sleep(50);
+//                    setProcessed(packet, isProcessed);
+                    PacketWrapper packetWrapper1 = packetWrapperMap.get(packet);
+                    if (packetWrapper1 != null) {
+                        packetWrapper1.isProcessed = isProcessed;
+                    } else {
+                        System.out.println("PacketWrapper::setProcessed => PacketWrapper is null! Packet: " + packet.getClass().getSimpleName());
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
         }
     }
 

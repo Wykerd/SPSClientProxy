@@ -1,7 +1,6 @@
 package org.koekepan.Minecraft.behaviours.server.entity;
 
 import com.github.steveice10.mc.protocol.packet.ingame.server.entity.ServerEntityEquipmentPacket;
-import com.github.steveice10.packetlib.Client;
 import com.github.steveice10.packetlib.packet.Packet;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 import org.koekepan.VAST.Packet.Behaviour;
@@ -28,8 +27,8 @@ public class ServerEntityEquipmentPacketBehaviour implements Behaviour<Packet> {
 //            clientInstance.sendPacketToClient(packet);
         } else {
             PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
-            if (packetWrapper.PlayerSpecific() != null){
-                if (packetWrapper.PlayerSpecific().equals(clientInstance.getUsername())){
+            if (packetWrapper.getPlayerSpecific() != null){
+                if (packetWrapper.getPlayerSpecific().equals(clientInstance.getUsername())){
                     PacketWrapper.setProcessed(packet, true);
 //                clientInstance.sendPacketToClient(packet);
                 } else {
@@ -40,6 +39,9 @@ public class ServerEntityEquipmentPacketBehaviour implements Behaviour<Packet> {
                     return;
                 }
                 return;
+            } else {
+                clientInstance.getPacketSender().removePacket(packet);
+                System.out.println("ServerEntityVelocityPacket not forwarded to client, because it is not player specific.");
             }
         }
     }
