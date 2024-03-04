@@ -21,6 +21,7 @@ import org.koekepan.VAST.Packet.SPSPacket;
 
 import static java.lang.Thread.sleep;
 import static org.koekepan.VAST.Packet.PacketUtil.*;
+import static org.koekepan.VAST.Packet.PacketWrapper.packetWrapperMap;
 
 public class VastConnection {
 
@@ -138,28 +139,30 @@ public class VastConnection {
                 int y = packet.y;
                 int radius = packet.radius;
 
-                System.out.println(clientInstance.getUsername() + " received publication from vast matcher: <" + packet.packet.getClass().getSimpleName() + "> username: <" + username + "> channel: <" + packet.channel + ">");
+                PacketWrapper packetWrapper = new PacketWrapper(packet.packet);
+                packetWrapper.unique_id = unique_id;
+                packetWrapperMap.put(packet.packet, packetWrapper);
 
-//                System.out.println("clientInstance username: " + clientInstance.getUsername());
-//                if (packet.packet.getClass().getSimpleName().equals("LoginSuccessPacket")) {
+//                System.out.println(clientInstance.getUsername() + " received publication from vast matcher: <" + packet.packet.getClass().getSimpleName() + "> username: <" + username + "> channel: <" + packet.channel + ">");
+
                 if (packet.channel.equals(clientInstance.getUsername())) { // Player Specific Packets
                     clientInstance.getPacketSender().addClientboundPacket(packet.packet);
-                    PacketWrapper.set_unique_id(packet.packet, unique_id);
                     PacketWrapper.setPlayerSpecific(packet.packet, username);
                     PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
-                    System.out.println("set player specific for packet <" + packet.packet.getClass().getSimpleName() + "> for username: <" + username + "> and channel: <" + packet.channel + ">");
+//                    System.out.println("set player specific for packet <" + packet.packet.getClass().getSimpleName() + "> for username: <" + username + "> and channel: <" + packet.channel + ">");
                 } else if (packet.channel.equals("clientBound") && !Objects.equals(packet.packet.getClass().getSimpleName(), "ServerKeepAlivePacket")) {
                      if (clientInstance != null) {
                          clientInstance.getPacketSender().addClientboundPacket(packet.packet);
-                         PacketWrapper.set_unique_id(packet.packet, unique_id);
                          PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
                      } else {
+                         System.out.println("ClientInstance is null");
                      }
                 } else {
                     if (!Objects.equals(username, "Herobrine")) {
 //                    Logger.log(SPSConnection.this, Logger.Level.WARN, new String[]{"connection","network", "publication"},"Received a packet <" + packet.packet.getClass().getSimpleName() + "> for an unknown session <"+username+">" + " via channel <" + packet.channel + ">");
                     }
                     System.out.println("No destination for packet <" + packet.packet.getClass().getSimpleName() + "> for session <" + username + ">");
+                    packetWrapperMap.remove(packet.packet);
                 }
 //                }
             }

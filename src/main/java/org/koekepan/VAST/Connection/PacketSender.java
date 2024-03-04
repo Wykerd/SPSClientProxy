@@ -70,14 +70,13 @@ public class PacketSender implements Runnable { // This is the packet sender, it
     }
 
     public void addClientboundPacket(Packet packet) {
-        PacketWrapper packetWrapper = new PacketWrapper(packet);
-        packetWrapperMap.put(packet, packetWrapper);
+        PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
         packetWrapper.clientBound = true;
 //        synchronized (PacketSender.class) { // Synchronize on the class object if static fields are being modified
-            queueNumberClientboundLast++;
-            clientboundPacketQueue.put(queueNumberClientboundLast, packetWrapper);
-//        }
+        queueNumberClientboundLast++;
         packetWrapper.queueNumber = queueNumberClientboundLast;
+        clientboundPacketQueue.put(queueNumberClientboundLast, packetWrapper);
+//        }
         clientInstances_PacketSenders.get(this).getPacketHandler().addPacket(packetWrapper);
 
 

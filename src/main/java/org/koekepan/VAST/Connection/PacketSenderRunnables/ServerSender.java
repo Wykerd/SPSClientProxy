@@ -129,20 +129,21 @@ public class ServerSender implements Runnable{
 
                             if (wrapper != null) {
                                 try {
-                                    System.out.println("ServerSender.run: <TIMED OUT> (clientbound) Wrapper is: " + wrapper.getPacket().getClass().getSimpleName() + " and isProcessed: " + wrapper.isProcessed);
+                                    System.out.println("ServerSender.run: <TIMED OUT> (serverbound) Wrapper is: " + wrapper.getPacket().getClass().getSimpleName() + " and isProcessed: " + wrapper.isProcessed);
                                     packetSender.removePacket(wrapper.getPacket());
                                     queueNumberServerbound++;
+                                    timeAdded = currentTime; // Reset time after handling timeouts
                                 } catch (Exception e) {
                                     System.out.println("Error removing packet: " + e.getMessage());
                                 }
                             }
                         }
-                        timeAdded = currentTime; // Reset time after handling timeouts
                     }
 
                     if (!packetSender.serverboundPacketQueue.containsKey(queueNumberServerbound) && queueNumberServerbound <= packetSender.queueNumberServerboundLast) {
                         while (!packetSender.serverboundPacketQueue.containsKey(queueNumberServerbound)) {
                             queueNumberServerbound++;
+                            timeAdded = currentTime; // Reset time after handling timeouts
                             // Check if queueNumberServerbound has reached or exceeded the last queue number
                             if (queueNumberServerbound > packetSender.queueNumberServerboundLast) {
                                 break; // Exit the loop if we have reached the end of the queue

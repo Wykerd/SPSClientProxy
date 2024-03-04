@@ -47,15 +47,15 @@ public class ClientSender implements Runnable{
 
                 // Handle timeout for both queues
                 long currentTime = System.currentTimeMillis();
-                if (currentTime - timeAdded > 20) { // TODO: Change back to 100 when problem found (could be 50) - This if seems to break the system?
+                if (currentTime - timeAdded > 50) { // TODO: Change back to 100 when problem found (could be 50) - This if seems to break the system? (could be 20 for single client, multi client it should be more)
                     if (clientboundPacketQueueContainsKey) {
 //                        System.out.println("PacketSender.run: <TIMED OUT> (clientbound) 1");
                         if (!wrapper.getPacket().getClass().getSimpleName().equals("ServerChunkDataPacket")) {
                             System.out.println("ClientSender.run: <TIMED OUT> (clientbound) Wrapper is: " + wrapper.getPacket().getClass().getSimpleName() + " and isProcessed: " + wrapper.isProcessed);
                             packetSender.removePacket(wrapper.getPacket());
                             queueNumberClientbound++;
+                            timeAdded = currentTime; // Reset time after handling timeouts
                         }
-                        timeAdded = currentTime; // Reset time after handling timeouts
                     }
                 }
 
@@ -63,6 +63,8 @@ public class ClientSender implements Runnable{
                 if (!packetSender.clientboundPacketQueue.containsKey(queueNumberClientbound) && queueNumberClientbound <= queueNumberClientboundLast) {
                     while (!packetSender.clientboundPacketQueue.containsKey(queueNumberClientbound)) {
                         queueNumberClientbound++;
+                        timeAdded = currentTime; // Reset time after handling timeouts
+
 //                        System.out.println("ClientSender.run: <INCREMENT> (clientbound) 1");
                         // Check if queueNumberClientbound has reached or exceeded the last queue number
                         if (queueNumberClientbound > queueNumberClientboundLast) {
