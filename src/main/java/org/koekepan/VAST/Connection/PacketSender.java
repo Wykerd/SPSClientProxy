@@ -2,6 +2,7 @@ package org.koekepan.VAST.Connection;
 
 import com.github.steveice10.packetlib.Session;
 import com.github.steveice10.packetlib.packet.Packet;
+import org.koekepan.Performance.PacketCapture;
 import org.koekepan.VAST.Connection.PacketSenderRunnables.ClientSender;
 import org.koekepan.VAST.Connection.PacketSenderRunnables.ServerSender;
 import org.koekepan.VAST.Packet.PacketWrapper;
@@ -94,6 +95,7 @@ public class PacketSender implements Runnable { // This is the packet sender, it
         packetWrapper.queueNumber = ++queueNumberServerboundLast;
         packetWrapper.unique_id = "SB" + UUID.randomUUID().toString().substring(0, 4) + queueNumberServerboundLast;
         serverboundPacketQueue.put(queueNumberServerboundLast, packetWrapper);
+        PacketCapture.log(packet.getClass().getSimpleName() + "_" + packetWrapper.unique_id, PacketCapture.LogCategory.SERVERBOUND_IN);
     }
 
     public void setClientSession(Session session) {
@@ -210,6 +212,8 @@ public class PacketSender implements Runnable { // This is the packet sender, it
 //                }
             }
         }
+
+        PacketCapture.log(packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet), PacketCapture.LogCategory.DELETED_PACKETS);
         PacketWrapper.removePacketWrapper(packet);
     }
 

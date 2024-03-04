@@ -117,7 +117,7 @@ public class PacketWrapper {
                     if (packetWrapper1 != null) {
                         packetWrapper1.isProcessed = isProcessed;
                     } else {
-                        System.out.println("PacketWrapper::setProcessed => PacketWrapper is null! Packet: " + packet.getClass().getSimpleName());
+                        System.out.println("PacketWrapper::setProcessed => (ERROR) PacketWrapper is null! Packet: " + packet.getClass().getSimpleName());
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
