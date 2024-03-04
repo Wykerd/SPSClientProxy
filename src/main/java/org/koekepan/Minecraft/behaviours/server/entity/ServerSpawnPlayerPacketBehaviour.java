@@ -39,7 +39,7 @@ public class ServerSpawnPlayerPacketBehaviour implements Behaviour<Packet> {
                 return;
             } else {
                 clientInstance.getPacketSender().removePacket(packet);
-                System.out.println("ServerSpawnPlayerPacket not forwarded to client, because it is not player specific.");
+//                System.out.println("ServerSpawnPlayerPacket not forwarded to client, because it is not player specific.");
             }
         }
     }

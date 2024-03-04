@@ -47,7 +47,7 @@ public class ServerEntityHeadLookPacketBehaviour implements Behaviour<Packet> {
                 return;
             } else {
                 clientInstance.getPacketSender().removePacket(packet);
-                System.out.println("ServerEntityHeadLookPacket not forwarded to client, because it is not player specific.");
+//                System.out.println("ServerEntityHeadLookPacket not forwarded to client, because it is not player specific.");
             }
         }
     }

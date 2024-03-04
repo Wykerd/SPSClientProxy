@@ -22,9 +22,9 @@ public class ServerLoginSuccessPacketBehaviour implements Behaviour<Packet> {
 		this.clientInstance = clientInstance;
 	}
 
-    public static Packet get_packet() {
-		return loginPacket;
-    }
+//    public static Packet get_packet() {
+//		return loginPacket;
+//    }
 
 	@Override
 	public void process(Packet packet) {
@@ -35,7 +35,7 @@ public class ServerLoginSuccessPacketBehaviour implements Behaviour<Packet> {
 
 //		PacketWrapper.setProcessed(packet, true);
 
-		loginPacket = packet;
+//		loginPacket = packet; // Removed because this is set for each client connecting to server
 		LoginSuccessPacket loginSuccessPacket = (LoginSuccessPacket)packet;
 
 

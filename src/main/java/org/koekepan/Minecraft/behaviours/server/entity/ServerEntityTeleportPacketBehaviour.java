@@ -41,13 +41,13 @@ public class ServerEntityTeleportPacketBehaviour implements Behaviour<Packet> {
 //                    SPSConnection.playerSpecificPacketMap.remove(packet);
 //                    PacketSender.removePacketFromQueue(packet);
 //                    Logger.log(this, Logger.Level.WARN, new String[]{"behaviour", "entityMovement"}, "EntityTeleport not forwarded to client.");
-                    System.out.println("EntityTeleport not forwarded to client.");
+//                    System.out.println("EntityTeleport not forwarded to client.");
                     clientInstance.getPacketSender().removePacket(packet);
                     return;
                 }
                 return;
             } else {
-                System.out.println("EntityTeleport not forwarded to client because it is not player specific.");
+//                System.out.println("EntityTeleport not forwarded to client because it is not player specific.");
                 clientInstance.getPacketSender().removePacket(packet);
             }
         }

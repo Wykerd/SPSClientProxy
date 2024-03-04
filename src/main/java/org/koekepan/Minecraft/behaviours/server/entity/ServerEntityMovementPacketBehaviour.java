@@ -47,7 +47,7 @@ public class ServerEntityMovementPacketBehaviour implements Behaviour<Packet> {
                 return;
             } else {
                 clientInstance.getPacketSender().removePacket(packet);
-                System.out.println("ServerEntityMovementPacket not forwarded to client, because it is not player specific.");
+//                System.out.println("ServerEntityMovementPacket not forwarded to client, because it is not player specific.");
             }
         }
     }
