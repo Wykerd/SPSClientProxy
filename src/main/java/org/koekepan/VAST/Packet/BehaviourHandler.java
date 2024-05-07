@@ -47,6 +47,16 @@ public class BehaviourHandler<T> {
         }
     }
 
+    public Behaviour<T> get_behaviour(T object) {
+        Behaviour<T> behaviour = behaviours.get(object.getClass());
+        if (behaviour != null) {
+            return behaviour;
+        } else {
+            System.out.println("No behaviour found for object of type: " + object.getClass().getName());
+            return null;
+        }
+    }
+
     public void printBehaviours() {
         for (Map.Entry<Class<? extends T>, Behaviour<T>> entry : behaviours.entrySet()) {
             System.out.println("Behaviour Type: " + entry.getKey().getName());

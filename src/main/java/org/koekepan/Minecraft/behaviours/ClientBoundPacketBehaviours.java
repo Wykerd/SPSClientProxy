@@ -109,7 +109,7 @@ public class ClientBoundPacketBehaviours extends BehaviourHandler<Packet> {
 		registerBehaviour(ServerOpenTileEntityEditorPacket.class, clientForwarder);
 		registerBehaviour(ServerPlayerAbilitiesPacket.class, clientForwarder);
 		registerBehaviour(ServerCombatPacket.class, clientForwarder);
-		registerBehaviour(ServerPlayerListEntryPacket.class, clientForwarder);
+		registerBehaviour(ServerPlayerListEntryPacket.class, 		new ServerPlayerListEntryPacketBehaviour(clientInstance));
 		registerBehaviour(ServerPlayerUseBedPacket.class, clientForwarder);
 		registerBehaviour(ServerEntityDestroyPacket.class, clientForwarder);
 		registerBehaviour(ServerEntityRemoveEffectPacket.class, clientForwarder);

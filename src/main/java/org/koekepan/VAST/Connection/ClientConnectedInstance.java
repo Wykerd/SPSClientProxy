@@ -18,6 +18,8 @@ import org.koekepan.VAST.Packet.SPSPacket;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +35,7 @@ public class ClientConnectedInstance {
     private int entityID = -1; // The entity ID of the player, if the player has joined the game (otherwise -1)
 
     public static HashMap<PacketSender, ClientConnectedInstance> clientInstances_PacketSenders = new HashMap<PacketSender, ClientConnectedInstance>();
+    public static HashSet<UUID> playerUUIDs = new HashSet<UUID>();
     private String clientUsername;
 
     private int x_position = 0;
@@ -75,6 +78,18 @@ public class ClientConnectedInstance {
 
     public PacketHandler getPacketHandler() {
         return packetHandler;
+    }
+
+    public void addPlayerUUID(UUID id) {
+        playerUUIDs.add(id);
+    }
+
+    public void removePlayerUUID(UUID id) {
+        playerUUIDs.remove(id);
+    }
+
+    public boolean hasPlayerUUID(UUID id) {
+        return playerUUIDs.contains(id);
     }
 
     private static class ClientSessionListener extends SessionAdapter { // This is the client listener (Listens to the packets sent/received from client)
@@ -164,6 +179,8 @@ public class ClientConnectedInstance {
     }
 
     public void setEntityID(int entityID) {
+        System.out.println("<" + this.clientUsername + "> Set entityID to " + entityID);
+
         this.entityID = entityID;
     }
 

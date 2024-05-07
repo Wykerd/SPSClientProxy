@@ -8,12 +8,16 @@ import org.koekepan.VAST.Connection.ClientConnectedInstance;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class PacketHandler implements Runnable {
 
 //    Deque<PacketWrapper> packetQueue = new ArrayDeque<PacketWrapper>();
     BehaviourHandler<Packet> behaviourHandler;
-    List<Thread> threads = new ArrayList<>(); // List to store all threads
+//    List<Thread> threads = new ArrayList<>(); // List to store all threads
+
+    private final ExecutorService executorService;
 
 
     public PacketHandler(ClientConnectedInstance clientInstance) {
@@ -28,27 +32,33 @@ public class PacketHandler implements Runnable {
         BehaviourHandler<Packet> behaviourHandler = BehaviourHandler.mergeBehaviourHandlers(clientBoundPacketBehaviours, serverBoundPacketBehaviours);
 
         this.setBehaviours(behaviourHandler);
+
+        // Initialize the thread pool with a fixed size. Adjust size based on your application's requirements and hardware capabilities.
+        this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
     public void addPacket(PacketWrapper packetWrapper) {
-        if (packetWrapper != null) {
-            if (!packetWrapper.isProcessed) {
-                Packet packet = packetWrapper.getPacket();
-                if (packet != null) {
-                    Thread thread = new Thread(() -> {
-                        this.behaviourHandler.process(packet);
-                    });
-                    thread.start();
-                    threads.add(thread); // Add the thread to the list
-                } else {
-                    System.out.println("PacketHandler::addPacket => Packet is null");
-                }
-            } else {
-                System.out.println("PacketHandler::addPacket => Packet is already processed");
-            }
-        } else {
+        if (packetWrapper == null) {
             System.out.println("PacketHandler::addPacket => PacketWrapper is null");
+            return;
         }
+        if (packetWrapper.isProcessed) {
+            System.out.println("PacketHandler::addPacket => Packet is already processed");
+            return;
+        }
+        Packet packet = packetWrapper.getPacket();
+        if (packet == null) {
+            System.out.println("PacketHandler::addPacket => Packet is null");
+            return;
+        }
+        executorService.submit(() -> {
+            try {
+                this.behaviourHandler.process(packet);
+                // Optionally, add callback or future to handle post-processing
+            } catch (Exception e) {
+                e.printStackTrace(); // Consider a more robust error handling approach
+            }
+        });
     }
     public void setBehaviours(BehaviourHandler<Packet> behaviourHandler) {
         this.behaviourHandler = behaviourHandler;
@@ -95,9 +105,6 @@ public class PacketHandler implements Runnable {
 
     public void stop() {
         // Stop all threads
-        for (Thread thread : threads) {
-            thread.interrupt();
-        }
-        threads.clear(); // Clear the list
+        executorService.shutdown();
     }
 }

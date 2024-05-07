@@ -98,12 +98,11 @@ public class VastConnection {
         socket.emit("spawn_VASTclient", "Minecraft Client 1", "10.42.0.1", "20000", "100", "100"); 
         
         try {
-            sleep(100);
+            sleep(1000);
+            this.subscribe(100, 100, 1000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        this.subscribe(100, 100, 1000);
-
         System.out.println("VAST Client initialised");
     }
 
@@ -147,7 +146,7 @@ public class VastConnection {
 
                 if (packet.channel.equals(clientInstance.getUsername())) { // Player Specific Packets
                     clientInstance.getPacketSender().addClientboundPacket(packet.packet);
-                    PacketWrapper.setPlayerSpecific(packet.packet, username);
+                    PacketWrapper.setPlayerSpecific(packet.packet, clientInstance.getUsername());
                     PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
 //                    System.out.println("set player specific for packet <" + packet.packet.getClass().getSimpleName() + "> for username: <" + username + "> and channel: <" + packet.channel + ">");
                 } else if (packet.channel.equals("clientBound") && !Objects.equals(packet.packet.getClass().getSimpleName(), "ServerKeepAlivePacket")) {

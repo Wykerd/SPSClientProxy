@@ -11,6 +11,7 @@ import com.github.steveice10.packetlib.tcp.TcpSessionFactory;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 import org.koekepan.VAST.Connection.VastConnection;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 public class App 
@@ -70,7 +71,22 @@ public class App
 
                 Session session = event.getSession();
 
-//                clientInstances.add(new ClientConnectedInstance(session, vastHost, vastPort));
+//                clientInstances.add(new ClientConnectedInstance(session, vastHost, vastPort));\
+                if (vastPort != 0) {
+                    // Create a new vast_com instance with ../vast_com "port"
+                    String command = "./vast_com";
+                    String argument = Integer.toString(vastPort);
+                    ProcessBuilder processBuilder = new ProcessBuilder(command, argument, "> /dev/null 2>&1 &");
+                    // processBuilder.directory(new File("/path/to/working/directory"));
+
+                    // Start the process in the background
+                    try {
+                        Process process = processBuilder.start();
+                        System.out.println("VAST_com started in background with port: " + vastPort);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
                 clientInstances.put(session, new ClientConnectedInstance(session, vastHost, vastPort));
 
 //                session.addListener(new ClientSessionListener());

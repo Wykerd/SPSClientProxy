@@ -79,7 +79,9 @@ public class ServerSender implements Runnable{
     public void run() {
         long timeAdded = System.currentTimeMillis();
         try {
+//            System.out.println(packetSender.serverboundPacketQueue.isEmpty());
             while (!packetSender.serverboundPacketQueue.isEmpty()) {
+//            System.out.println("Test");
                 try {
                     if (packetSender.serverboundPacketQueue.containsKey(queueNumberServerbound)) {
                         PacketWrapper wrapper = null;
