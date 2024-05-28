@@ -5,15 +5,13 @@ import com.github.steveice10.packetlib.packet.Packet;
 import org.koekepan.Performance.PacketCapture;
 import org.koekepan.VAST.Connection.PacketSenderRunnables.ClientSender;
 import org.koekepan.VAST.Connection.PacketSenderRunnables.ServerSender;
+import org.koekepan.VAST.Packet.ExecutorServiceSingleton;
 import org.koekepan.VAST.Packet.PacketWrapper;
 import org.koekepan.VAST.Packet.SPSPacket;
 
 import java.util.HashMap;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.koekepan.VAST.Connection.ClientConnectedInstance.clientInstances_PacketSenders;
 import static org.koekepan.VAST.Packet.PacketWrapper.packetWrapperMap;
@@ -24,7 +22,7 @@ public class PacketSender implements Runnable { // This is the packet sender, it
 
 //    public final ConcurrentHashMap
 //    private int queueNumberClientbound = 0;    // The queue number of the next packet to be sent to the client
-    public int queueNumberServerbound = 0;    // The queue number of the next packet to be sent to the server
+//    public int queueNumberServerbound = 0;    // The queue number of the next packet to be sent to the server
     public int queueNumberClientboundLast = 0;    // The queue number of the last packet in the queue
     public int queueNumberServerboundLast = 0;    // The queue number of the last packet in the queue
     private Session clientSession;
@@ -35,6 +33,14 @@ public class PacketSender implements Runnable { // This is the packet sender, it
     public PacketSender() {
     }
 
+    public ClientSender getClientSender() {
+        return clientSender;
+    }
+
+    public ServerSender getServerSender() {
+        return serverSender;
+    }
+
     public void start() {
         startServerSender();
         startClientSender();
@@ -43,41 +49,64 @@ public class PacketSender implements Runnable { // This is the packet sender, it
     private ScheduledExecutorService packetExecutor;
     private ScheduledExecutorService packetExecutor2;
 
+    ScheduledExecutorService executorService = ExecutorServiceSingleton.getInstance();
+    private Future<?> serverSenderFuture;
+    private Future<?> clientSenderFuture;
+
     public void startServerSender() {
         this.serverSender = new ServerSender(this, clientInstances_PacketSenders.get(this).getVastConnection());
         packetExecutor = Executors.newSingleThreadScheduledExecutor();
         packetExecutor.scheduleAtFixedRate(serverSender, 0, 1, TimeUnit.MILLISECONDS);
+//        serverSenderFuture= executorService.scheduleAtFixedRate(serverSender, 0, 1, TimeUnit.MILLISECONDS);
     }
 
     public void startClientSender() {
         this.clientSender = new ClientSender(this, this.clientSession);
         packetExecutor2 = Executors.newSingleThreadScheduledExecutor();
         packetExecutor2.scheduleAtFixedRate(clientSender, 0, 1, TimeUnit.MILLISECONDS);
+//        clientSenderFuture = executorService.scheduleAtFixedRate(clientSender, 0, 1, TimeUnit.MILLISECONDS);
     }
 
     public void stopServerSender() {
         if (packetExecutor != null) {
             packetExecutor.shutdown();
             packetExecutor = null;
+        } else {
+            System.out.println("PacketSender.stopServerSender: packetExecutor is null");
         }
+//        if (serverSenderFuture != null) {
+//            serverSenderFuture.cancel(true);
+//            serverSenderFuture = null;
+//        }
     }
 
     public void stopClientSender() {
         if (packetExecutor2 != null) {
             packetExecutor2.shutdown();
             packetExecutor2 = null;
+        } else {
+            System.out.println("PacketSender.stopClientSender: packetExecutor2 is null");
         }
+//        if (clientSenderFuture != null) {
+//            clientSenderFuture.cancel(true);
+//            clientSenderFuture = null;
+//        }
     }
 
     public void addClientboundPacket(Packet packet) {
         PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
-        packetWrapper.clientBound = true;
+
+        if (packetWrapper != null) {
+            packetWrapper.clientBound = true;
 //        synchronized (PacketSender.class) { // Synchronize on the class object if static fields are being modified
-        queueNumberClientboundLast++;
-        packetWrapper.queueNumber = queueNumberClientboundLast;
-        clientboundPacketQueue.put(queueNumberClientboundLast, packetWrapper);
+//            queueNumberClientboundLast++;
+            packetWrapper.queueNumber = ++queueNumberClientboundLast;
+            clientboundPacketQueue.put(queueNumberClientboundLast, packetWrapper);
 //        }
-        clientInstances_PacketSenders.get(this).getPacketHandler().addPacket(packetWrapper);
+            clientInstances_PacketSenders.get(this).getPacketHandler().addPacket(packetWrapper);
+        } else {
+            System.out.println("ERROR: PacketSender.addClientboundPacket: packetWrapper is null");
+        }
 
 
         // ConsoleIO.println("PacketSender.addClientboundPacket: " + packet.getClass().getSimpleName());
@@ -88,12 +117,12 @@ public class PacketSender implements Runnable { // This is the packet sender, it
         packetWrapper.clientBound = false;
         packetWrapperMap.put(packet, packetWrapper);
 
-        clientInstances_PacketSenders.get(this).getPacketHandler().addPacket(packetWrapper);
-
 //        System.out.println("PacketSender.addServerboundPacket: " + packet.getClass().getSimpleName());
         packetWrapper.queueNumber = ++queueNumberServerboundLast;
         packetWrapper.unique_id = "SB" + UUID.randomUUID().toString().substring(0, 4) + queueNumberServerboundLast;
         serverboundPacketQueue.put(queueNumberServerboundLast, packetWrapper);
+
+        clientInstances_PacketSenders.get(this).getPacketHandler().addPacket(packetWrapper);
         PacketCapture.log(packet.getClass().getSimpleName() + "_" + packetWrapper.unique_id, PacketCapture.LogCategory.SERVERBOUND_IN);
     }
 

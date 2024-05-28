@@ -16,6 +16,8 @@ import java.util.concurrent.ExecutionException;
 import org.koekepan.App;
 import org.koekepan.Minecraft.ChunkPosition;
 import org.koekepan.Performance.PacketCapture;
+import org.koekepan.VAST.Connection.PacketSenderRunnables.ClientSender;
+import org.koekepan.VAST.Connection.PacketSenderRunnables.ServerSender;
 import org.koekepan.VAST.Packet.PacketWrapper;
 import org.koekepan.VAST.Packet.SPSPacket;
 
@@ -44,6 +46,9 @@ public class VastConnection {
         socket.emit("disconnect_client", connectionID);
 //        socket.emit("disconnect", connectionID);
         socket.disconnect();
+        socket = null;
+
+        System.out.println("VAST: Disconnected from VAST server");
     }
 
     private boolean initialiseConnection() {
@@ -98,8 +103,9 @@ public class VastConnection {
         socket.emit("spawn_VASTclient", "Minecraft Client 1", "10.42.0.1", "20000", "100", "100"); 
         
         try {
-            sleep(1000);
-            this.subscribe(100, 100, 1000);
+            sleep(100);
+////            this.subscribe(100, 100, 100000);
+//            this.clientInstance.startPermanentSubscriptions(100, 100);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -128,6 +134,7 @@ public class VastConnection {
             public void call(Object... data) { // receive publication from vast matcher as a client
 //                tempcounter_deleteme += 1;
 //				ConsoleIO.println("Received a publication from vastnet and attempting to send to Minecraft player!");
+//                VastConnection.printQueueNumbers();
                 final SPSPacket packet = receivePublication(data);
 
                 // Format of packet.username: "username&unique_id"
@@ -140,13 +147,19 @@ public class VastConnection {
 
                 PacketWrapper packetWrapper = new PacketWrapper(packet.packet);
                 packetWrapper.unique_id = unique_id;
+
+                if (packetWrapperMap.containsKey(packet.packet)) {
+                System.out.println("Packet already exists in packetWrapperMap, i.e. duplicate packet");
+                }
+//                System.out.println("receive");
+
                 packetWrapperMap.put(packet.packet, packetWrapper);
 
 //                System.out.println(clientInstance.getUsername() + " received publication from vast matcher: <" + packet.packet.getClass().getSimpleName() + "> username: <" + username + "> channel: <" + packet.channel + ">");
 
                 if (packet.channel.equals(clientInstance.getUsername())) { // Player Specific Packets
-                    clientInstance.getPacketSender().addClientboundPacket(packet.packet);
                     PacketWrapper.setPlayerSpecific(packet.packet, clientInstance.getUsername());
+                    clientInstance.getPacketSender().addClientboundPacket(packet.packet);
                     PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
 //                    System.out.println("set player specific for packet <" + packet.packet.getClass().getSimpleName() + "> for username: <" + username + "> and channel: <" + packet.channel + ">");
                 } else if (packet.channel.equals("clientBound") && !Objects.equals(packet.packet.getClass().getSimpleName(), "ServerKeepAlivePacket")) {
@@ -154,7 +167,7 @@ public class VastConnection {
                          clientInstance.getPacketSender().addClientboundPacket(packet.packet);
                          PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
                      } else {
-                         System.out.println("ClientInstance is null");
+                         System.out.println("ERROR: ClientInstance is null");
                      }
                 } else {
                     if (!Objects.equals(username, "Herobrine")) {
@@ -229,7 +242,8 @@ public class VastConnection {
 //        temp_pubcounter += 1;
 //        Logger.log(this, Logger.Level.DEBUG, new String[]{"counter", "clientPub"},"Amount of packets sent: " + temp_pubcounter + ": " + packet.packet.getClass().getSimpleName());
         PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.SERVERBOUND_OUT);
-        socket.emit("publish", connectionID, packet.username, 100, 100, 1000, json, packet.channel); // TODO: AOI - This should not be hard coded, this is also wack
+//        socket.emit("publish", connectionID, packet.username, 100, 100, 10000, json, packet.channel); // TODO: AOI - This should not be hard coded, this is also wack
+        socket.emit("publish", connectionID, packet.username, this.clientInstance.getXPosition(), this.clientInstance.getYPosition(), 0, json, packet.channel);
     }
 
 
@@ -237,5 +251,44 @@ public class VastConnection {
         int x_position = x;
         int z_position = y;
         socket.emit("move", x_position, z_position);
+    }
+
+    public static void printQueueNumbers() {
+        for (ClientConnectedInstance instance : ClientConnectedInstance.clientInstances_PacketSenders.values()) {
+
+            if (instance != null){
+                PacketSender packetSender = instance.getPacketSender();
+                if (packetSender == null) {
+                    System.out.println("packetSender is null for instance: " + instance.getUsername());
+//                    Now print all instances
+                    for (ClientConnectedInstance instance1 : ClientConnectedInstance.clientInstances_PacketSenders.values()) {
+                        System.out.println("Instance: " + instance1.getUsername());
+                    }
+                    return;
+                }
+//            System.out.println("User: " + instance.getUsername());
+                ClientSender clientSender = packetSender.getClientSender();
+                if (clientSender != null) {
+                    if (packetSender.queueNumberClientboundLast - clientSender.getQueueNumberClientbound() > 10) {
+                        System.out.println("User: " + instance.getUsername() + " queueNumberClientbound: " + clientSender.getQueueNumberClientbound() + " queueNumberClientboundLast: " + packetSender.queueNumberClientboundLast);
+                    }
+//                System.out.println("User: " + instance.getUsername() + " queueNumberClientbound: " + clientSender.getQueueNumberClientbound() + " queueNumberClientboundLast: " + packetSender.queueNumberClientboundLast);
+                }
+
+                ServerSender serverSender = packetSender.getServerSender();
+                if (serverSender != null) {
+                    if (packetSender.queueNumberServerboundLast - serverSender.getQueueNumberServerbound() > 10) {
+                        System.out.println("User: " + instance.getUsername() + " queueNumberServerbound: " + serverSender.getQueueNumberServerbound() + " queueNumberServerboundLast: " + packetSender.queueNumberServerboundLast);
+                    }
+//                System.out.println("User: " + instance.getUsername() + " queueNumberServerbound: " + serverSender.getQueueNumberServerbound() + " queueNumberServerboundLast: " + packetSender.queueNumberServerboundLast);
+                }
+
+//                Print the size of the clientboundPacketQueue and the serverboundPacketQueue
+//                System.out.println("User: " + instance.getUsername() + " clientboundPacketQueue: " + packetSender.clientboundPacketQueue.size() + " serverboundPacketQueue: " + packetSender.serverboundPacketQueue.size());
+
+//            System.out.println("User: " + instance.getUsername() + " queueNumberClientbound: " + packetSender.getClientSender().getQueueNumberClientbound() + " queueNumberClientboundLast: " + packetSender.queueNumberClientboundLast);
+//            System.out.println("queueNumberClientboundLast: " + packetSender.getQueueNumberClientboundLast());
+            }
+        }
     }
 }

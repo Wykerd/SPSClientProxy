@@ -24,6 +24,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.Thread.sleep;
+
 public class ClientConnectedInstance {
     private VastConnection vastConnection; // The connection to the VAST_COM server, used to publish packets to the vast network
     private PacketSender packetSender; // The packet sender, used to send packets to queue packets that are destined for the VAST_COM server and the client
@@ -60,7 +62,7 @@ public class ClientConnectedInstance {
 
         new Thread(() -> { // This thread is used to disconnect the client if it hasn't joined the game after 5 seconds
             try {
-                Thread.sleep(5000); // Sleep for 5 seconds
+                sleep(5000); // Sleep for 5 seconds
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -110,6 +112,8 @@ public class ClientConnectedInstance {
 
                 System.out.println("EmulatedServer: Received login packet from " + username);
                 App.clientInstances.get(event.getSession()).setClientUsername(username);
+
+//                App.clientInstances.get(event.getSession()).startPermanentSubscriptions(150, 150);
                 EstablishConnectionPacket establishConnectionPacket = new EstablishConnectionPacket(username, true);
 
                 if (App.clientInstances.get(event.getSession()) != null) {
@@ -146,8 +150,7 @@ public class ClientConnectedInstance {
 
     private void setClientUsername(String username) {
         this.clientUsername = username;
-
-        this.vastConnection.subscribe(100, 100, 1000, username); // TODO: This should be dynamic
+        this.vastConnection.subscribe(0,0,10, username);
     }
 
     public VastConnection getVastConnection() {
@@ -162,10 +165,6 @@ public class ClientConnectedInstance {
         return session;
     }
 
-    public Boolean getJoined() {
-        return joined;
-    }
-
     public void setJoined(Boolean joined) {
         this.joined = joined;
     }
@@ -175,6 +174,9 @@ public class ClientConnectedInstance {
     }
 
     public int getEntityID() {
+        if (entityID == -1) {
+            System.out.println("EntityID is -1");
+        }
         return entityID;
     }
 
@@ -184,14 +186,8 @@ public class ClientConnectedInstance {
         this.entityID = entityID;
     }
 
-    public void move_player(int x, int y) {
-        this.x_position = x;
-        this.y_position = y;
-
-        this.vastConnection.publishMove(x, y);
-    }
-
     boolean created_mobile_subscription = false;
+
     public void set_position(int x, int y) { // TODO: This is currently done in the serverBound packet, think about moveing it to the clientBound packet
         if (this.x_position == x && this.y_position == y) {
             return;
@@ -226,12 +222,27 @@ public class ClientConnectedInstance {
 
     }
 
-    public void startPermanentSubscriptions(double x, double z) {
-        this.vastConnection.unsubscribe(this.getUsername());
-        this.vastConnection.subscribeMobile((int)x, (int)z, 10, this.getUsername());
+    public int getXPosition() {
+        return x_position;
+    }
+    public int getYPosition() {
+        return y_position;
+    }
 
-        this.vastConnection.unsubscribe("clientBound");
-        this.vastConnection.subscribeMobilePolygon(getSquare((int)x, (int)z, (21*16 + 16*2)), "clientBound"); // Each chunk is 16x16, so 21 chunks is 21*16, and 16*2 is the extra 2 chunks on each side as a buffer
+    public void startPermanentSubscriptions(double x, double z) {
+//        this.vastConnection.unsubscribe(this.getUsername());
+//        this.vastConnection.subscribeMobile((int)x, (int)z, 100, this.getUsername());
+//        this.vastConnection.subscribeMobilePolygon(getSquare((int)x, (int)z, (21*16 + 16*2)), this.getUsername()); // Dit is waar hy die chunks en specific userbound packets receive
+//        this.vastConnection.subscribeMobilePolygon(getSquare((int)x, (int)z, (21*16 + 16*2)), this.getUsername()); // Dit is waar hy die chunks en specific userbound packets receive
+
+
+
+//        this.vastConnection.subscribe(0,0,10, this.getUsername()); // This happens in setClientUsername!
+
+        this.vastConnection.unsubscribe("clientBound"); // Should not have any clientBound subscriptions
+//        this.vastConnection.subscribeMobilePolygon(getSquare((int)x, (int)z, (21*16 + 16*2)), "clientBound"); // Each chunk is 16x16, so 21 chunks is 21*16, and 16*2 is the extra 2 chunks on each side as a buffer
+        this.vastConnection.subscribeMobile((int)x, (int)z, 80, "clientBound"); // TODO: Change to square (5*12) or something
+//        this.vastConnection.subscribeMobile((int)x, (int)z, 10000, "clientBound");
     }
 
     private static ArrayList<ChunkPosition> getSquare(int x, int z, int sideLength) {
@@ -254,6 +265,26 @@ public class ClientConnectedInstance {
     }
 
     public void disconnect() {
+//        clientInstances_PacketSenders.remove(this.packetSender);
+
+        try {
+            if (this.packetSender != null) {
+                this.packetSender.stop();
+                this.packetSender = null;
+            }
+        } catch (NullPointerException e) {
+            System.out.println("Error stopping packetSender: " + e.getMessage());
+        }
+
+        try {
+            if (this.packetHandler != null) {
+                this.packetHandler.stop();
+                this.packetHandler = null;
+                System.out.println("PacketHandler stopped");
+            }
+        } catch (NullPointerException e) {
+            System.out.println("Error stopping packetHandler: " + e.getMessage());
+        }
 
         try {
             SPSPacket disconnectPacket = new SPSPacket(
@@ -273,29 +304,14 @@ public class ClientConnectedInstance {
             if (this.vastConnection != null) {
                 this.vastConnection.disconnect();
                 this.vastConnection = null;
+            } else {
+                System.out.println("VastConnection is null");
             }
         } catch (NullPointerException e) {
             System.out.println("Error disconnecting vastConnection: " + e.getMessage());
         }
 
-        try {
-            if (this.packetSender != null) {
-                this.packetSender.stop();
-                this.packetSender = null;
-            }
-        } catch (NullPointerException e) {
-            System.out.println("Error stopping packetSender: " + e.getMessage());
-        }
-
-        try {
-            if (this.packetHandler != null) {
-                this.packetHandler.stop();
-                this.packetHandler = null;
-            }
-        } catch (NullPointerException e) {
-            System.out.println("Error stopping packetHandler: " + e.getMessage());
-        }
-
+        this.session.removeListener(this.session.getListeners().get(0));
         try {
             if (this.session != null) {
                 this.session.disconnect("Disconnecting from server :)");
@@ -305,7 +321,8 @@ public class ClientConnectedInstance {
             System.out.println("Error disconnecting session: " + e.getMessage());
         }
 
-        clientInstances_PacketSenders.remove(this.packetSender);
-        App.clientInstances.remove(this);
+//        App.stop();
+//        clientInstances_PacketSenders.remove(this);
+//        App.clientInstances.remove(this);
     }
 }

@@ -32,6 +32,8 @@ public class App
 //    private static final ArrayList<ClientConnectedInstance> clientInstances = new ArrayList<ClientConnectedInstance>();
     public static HashMap<Session, ClientConnectedInstance> clientInstances = new HashMap<Session, ClientConnectedInstance>();
 
+    static int count = 0;
+
     public App() {
         // 0. Initialize the packet sender
 //        PacketSender packetSender = new PacketSender();
@@ -75,7 +77,9 @@ public class App
                 if (vastPort != 0) {
                     // Create a new vast_com instance with ../vast_com "port"
                     String command = "./vast_com";
+                    vastPort = vastPort + count;
                     String argument = Integer.toString(vastPort);
+                    count = count + 1;
                     ProcessBuilder processBuilder = new ProcessBuilder(command, argument, "> /dev/null 2>&1 &");
                     // processBuilder.directory(new File("/path/to/working/directory"));
 
@@ -96,7 +100,9 @@ public class App
             @Override
             public void sessionRemoved(SessionRemovedEvent sessionRemovedEvent) {
                 System.out.println("Session removed: " + sessionRemovedEvent.getSession().getHost() + ":" + sessionRemovedEvent.getSession().getPort());
-                clientInstances.get(sessionRemovedEvent.getSession()).disconnect();
+                ClientConnectedInstance instance = clientInstances.get(sessionRemovedEvent.getSession());
+                instance.disconnect();
+                Runtime.getRuntime().gc();
             }
         });
 

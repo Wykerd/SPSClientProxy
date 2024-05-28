@@ -29,9 +29,18 @@ public class ClientPlayerMovementPacketBehaviour implements Behaviour<Packet> {
         PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
         if (packetWrapper != null) {
             packetWrapper.setSPSPacket(spsPacket);
+            packetWrapper.isProcessed = true;
+//            PacketWrapper.setProcessed(packet, true);
+//            PacketCapture.log(packet.getClass().getSimpleName() + "_DONE_" + packetWrapper.unique_id, PacketCapture.LogCategory.SERVERBOUND_BEH);
+        } else {
+//            PacketCapture.log(packet.getClass().getSimpleName() + "_DONE_NULLPACKETWRAPPER", PacketCapture.LogCategory.SERVERBOUND_BEH);
+            System.out.println("<ERROR!> ClientPlayerMovementPacketBehaviour::process => PacketWrapper is null while processing packet: " + packet.toString());
+            clientInstance.getPacketSender().removePacket(packet);
+            return;
         }
 
-        PacketWrapper.setProcessed(packet, true);
+
+
 
 //        clientInstance.getVastConnection().unsubscribe("clientBound");
 //        clientInstance.getVastConnection().unsubscribe(clientInstance.getUsername());

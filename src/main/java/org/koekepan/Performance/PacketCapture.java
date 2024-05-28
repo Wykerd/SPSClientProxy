@@ -22,6 +22,12 @@ public class PacketCapture {
         ADD_TO_OUTGOING_QUEUE,
         PROCESSING_START,
         UNKNOWN,
+        CHUNK_DELETED_PACKETS_TIME,
+        SERVERBOUND_BEH_TIME,
+        PACKET_BEH_QUEUE,
+        SERVERBOUND_BEH,
+        PACKET_BEH_HANDLER,
+        SERVERBOUND_QUEUE,
     }
 
     // Directory where logs will be stored
@@ -53,6 +59,7 @@ public class PacketCapture {
 
     // Synchronized to make it thread-safe
     public static synchronized void log(String message, LogCategory category) {
+//        return;
         FileWriter fileWriter = null;
         String targetFilename = getFilenameByCategory(category);
 
@@ -124,6 +131,24 @@ public class PacketCapture {
                 break;
             case UNKNOWN:
                 filename = "cp_clientbound_in_unknownRecipient_packet_log.csv";
+                break;
+            case CHUNK_DELETED_PACKETS_TIME:
+                filename = "cp_chunk_deleted_packets_time.csv";
+                break;
+            case SERVERBOUND_BEH_TIME:
+                filename = "cp_serverbound_beh_time.csv";
+                break;
+            case PACKET_BEH_QUEUE:
+                filename = "cp_packet_beh_queue.csv";
+                break;
+            case SERVERBOUND_BEH:
+                filename = "cp_serverbound_beh.csv";
+                break;
+            case PACKET_BEH_HANDLER:
+                filename = "cp_packet_beh_handler.csv";
+                break;
+            case SERVERBOUND_QUEUE:
+                filename = "cp_serverbound_queue.csv";
                 break;
         }
         return LOG_DIR + filename;

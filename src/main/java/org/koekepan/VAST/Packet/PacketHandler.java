@@ -3,13 +3,13 @@ package org.koekepan.VAST.Packet;
 import com.github.steveice10.packetlib.packet.Packet;
 import org.koekepan.Minecraft.behaviours.ClientBoundPacketBehaviours;
 import org.koekepan.Minecraft.behaviours.ServerBoundPacketBehaviours;
+import org.koekepan.Performance.PacketCapture;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class PacketHandler implements Runnable {
 
@@ -18,6 +18,9 @@ public class PacketHandler implements Runnable {
 //    List<Thread> threads = new ArrayList<>(); // List to store all threads
 
     private final ExecutorService executorService;
+//    private final Semaphore semaphore;
+//    private final BlockingQueue<PacketWrapper> packetQueue;
+
 
 
     public PacketHandler(ClientConnectedInstance clientInstance) {
@@ -34,7 +37,10 @@ public class PacketHandler implements Runnable {
         this.setBehaviours(behaviourHandler);
 
         // Initialize the thread pool with a fixed size. Adjust size based on your application's requirements and hardware capabilities.
-        this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+//        this.executorService = Executors.newFixedThreadPool((int)Runtime.getRuntime().availableProcessors());
+        this.executorService = ExecutorServiceSingleton.getInstance();
+//        this.semaphore = new Semaphore(Runtime.getRuntime().availableProcessors()); // Adjust this value based on your needs
+//        this.packetQueue = new LinkedBlockingQueue<>();
     }
 
     public void addPacket(PacketWrapper packetWrapper) {
@@ -43,7 +49,7 @@ public class PacketHandler implements Runnable {
             return;
         }
         if (packetWrapper.isProcessed) {
-            System.out.println("PacketHandler::addPacket => Packet is already processed");
+//            System.out.println("PacketHandler::addPacket => Packet is already processed");
             return;
         }
         Packet packet = packetWrapper.getPacket();
@@ -51,6 +57,19 @@ public class PacketHandler implements Runnable {
             System.out.println("PacketHandler::addPacket => Packet is null");
             return;
         }
+
+//        packetWrapper.isProcessed = true;
+
+//        PacketCapture.log(packet.getClass().getSimpleName() + "_" + packetWrapper.unique_id, PacketCapture.LogCategory.PACKET_BEH_QUEUE);
+//        ExecutorServiceSingleton.executeWithTimeout(() -> {
+//            try {
+//                this.behaviourHandler.process(packet);
+//                // Optionally, add callback or future to handle post-processing
+//            } catch (Exception e) {
+//                e.printStackTrace(); // Consider a more robust error handling approach
+//            }
+//        }, 300, TimeUnit.MILLISECONDS);
+
         executorService.submit(() -> {
             try {
                 this.behaviourHandler.process(packet);
@@ -59,6 +78,23 @@ public class PacketHandler implements Runnable {
                 e.printStackTrace(); // Consider a more robust error handling approach
             }
         });
+
+//        try {
+//            semaphore.acquire();
+//            executorService.submit(() -> {
+//                try {
+//                    this.behaviourHandler.process(packet);
+//                } catch (Exception e) {
+//                    e.printStackTrace(); // Consider a more robust error handling approach
+//                } finally {
+//                    semaphore.release();
+//                }
+//            });
+//        } catch (InterruptedException e) {
+//            Thread.currentThread().interrupt(); // Preserve the interrupt status
+//            // Handle the exception
+//        }
+//        packetQueue.offer(packetWrapper);
     }
     public void setBehaviours(BehaviourHandler<Packet> behaviourHandler) {
         this.behaviourHandler = behaviourHandler;
@@ -66,8 +102,32 @@ public class PacketHandler implements Runnable {
 
     @Override
     public void run() {
+//        while (true) {
+////            System.out.println(packetQueue.toArray().length);
+//            List<PacketWrapper> batch = new ArrayList<>();
+//            packetQueue.drainTo(batch);
+//
+//            if (!batch.isEmpty()) {
+//                try {
+//                    semaphore.acquire();
+//                    executorService.submit(() -> {
+//                        try {
+//                            for (PacketWrapper packetWrapper : batch) {
+//                                this.behaviourHandler.process(packetWrapper.getPacket());
+//                            }
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        } finally {
+//                            semaphore.release();
+//                        }
+//                    });
+//                } catch (InterruptedException e) {
+//                    Thread.currentThread().interrupt();
+//                }
+//            }
+//        }
 
-        try {
+//        try {
 
             // New thread per process
 
@@ -98,13 +158,13 @@ public class PacketHandler implements Runnable {
 //                    }
 //                }
 //            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
     }
 
     public void stop() {
         // Stop all threads
-        executorService.shutdown();
+//        executorService.shutdown(); // TODO: This is temp, just while I use executorServiceSingleton
     }
 }

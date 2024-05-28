@@ -29,20 +29,28 @@ public class ServerSpawnPlayerPacketBehaviour implements Behaviour<Packet> {
             PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
             clientInstance.getPacketSender().removePacket(packet);
 
-
             try {
                 Thread.sleep(250);
             } catch (Exception e) {
                 System.out.println("ServerSpawnPlayerPacketBehaviour for packet: <" + packet.getClass().getSimpleName() + "> failed setting processed: <" + e.getMessage() + ">");
             }
 
-            PacketWrapper.packetWrapperMap.put(packet, packetWrapper);
-            clientInstance.getPacketSender().addClientboundPacket(packet);
+//            PacketWrapper.packetWrapperMap.put(packet, packetWrapper);
+
+            if (clientInstance.getPacketSender() != null) {
+                PacketWrapper newPacketWrapper = new PacketWrapper(packet, true);
+                PacketWrapper.packetWrapperMap.put(packet, newPacketWrapper);
+//            PacketWrapper.setProcessed(packet, true);
+//                System.out.println("THIS ONE 1 for USERNAME: " + clientInstance.getUsername());
+                clientInstance.getPacketSender().addClientboundPacket(packet);
+            } else {
+                System.out.println("ServerSpawnPlayerPacketBehaviour::process => PacketSender is null for user: <" + clientInstance.getUsername() + ">");
+            }
+
 //            System.out.println("<" + clientInstance.getUsername() + "> ServerSpawnPlayerPacket set to processed != " + serverSpawnPlayerPacketBehaviour.getEntityId());
-            PacketWrapper.setProcessed(packet, true);
         } else {
             PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
-            if (packetWrapper.getPlayerSpecific() != null) {
+            if (packetWrapper != null && packetWrapper.getPlayerSpecific() != null) {
                 if (packetWrapper.getPlayerSpecific().equals(clientInstance.getUsername())) {
 //                    System.out.println("<" + clientInstance.getUsername() + "> ServerSpawnPlayerPacket set to processed (player specific) " + serverSpawnPlayerPacketBehaviour.getEntityId());
                     PacketWrapper.setProcessed(packet, true);

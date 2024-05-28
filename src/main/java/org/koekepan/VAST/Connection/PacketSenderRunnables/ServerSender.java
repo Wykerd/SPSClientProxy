@@ -1,6 +1,7 @@
 package org.koekepan.VAST.Connection.PacketSenderRunnables;
 
 import com.github.steveice10.packetlib.Session;
+import org.koekepan.Performance.PacketCapture;
 import org.koekepan.VAST.Connection.PacketSender;
 import org.koekepan.VAST.Connection.VastConnection;
 import org.koekepan.VAST.Packet.PacketHandler;
@@ -21,7 +22,11 @@ public class ServerSender implements Runnable{
 
     private int queueNumberServerbound = 0;
 
-//    @Override
+    public int getQueueNumberServerbound() {
+        return queueNumberServerbound;
+    }
+
+    //    @Override
 //    public void run() {
 //        //        int lastCheckedQueueNumber = -1; // Last checked queue number for comparison
 //        long timeAdded = System.currentTimeMillis();
@@ -81,8 +86,11 @@ public class ServerSender implements Runnable{
         try {
 //            System.out.println(packetSender.serverboundPacketQueue.isEmpty());
             while (!packetSender.serverboundPacketQueue.isEmpty()) {
+//                Thread.sleep(5);
+//            while (true) {
 //            System.out.println("Test");
                 try {
+//                    PacketCapture.log("ServerSender.run: serverboundPacketQueue.size() = " + packetSender.serverboundPacketQueue.size() + " and queueNumberServerbound = " + queueNumberServerbound + " and serverboundPacketQueueContainsKey = " + packetSender.serverboundPacketQueue.containsKey(queueNumberServerbound) + " and serverboundPacketQueueContainsKey = " + packetSender.serverboundPacketQueue.containsKey(queueNumberServerbound) + " serverboundpacketqueuelast = " + packetSender.queueNumberServerboundLast, PacketCapture.LogCategory.SERVERBOUND_QUEUE);
                     if (packetSender.serverboundPacketQueue.containsKey(queueNumberServerbound)) {
                         PacketWrapper wrapper = null;
                         try {
@@ -90,6 +98,9 @@ public class ServerSender implements Runnable{
                         } catch (Exception e) {
                             System.out.println("Error getting PacketWrapper: " + e.getMessage());
                         }
+
+//                        assert wrapper != null;
+//                        PacketCapture.log(wrapper.getPacket().getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(wrapper.getPacket()) + " " + wrapper.isProcessed, PacketCapture.LogCategory.PROCESSING_START);
 
                         if (wrapper != null && wrapper.isProcessed && clientInstances_PacketSenders.get(packetSender).getVastConnection() != null) {
                             SPSPacket spsPacket2 = null;
@@ -120,7 +131,7 @@ public class ServerSender implements Runnable{
 
                     // Handle timeout for both queues
                     long currentTime = System.currentTimeMillis();
-                    if (currentTime - timeAdded > 50) { // TODO: Change back to 100 when problem found (could be 50)
+                    if ((currentTime - timeAdded > 250)) { // TODO: Change back to 100 when problem found (could be 50)
                         if (packetSender.serverboundPacketQueue.containsKey(queueNumberServerbound)) {
                             PacketWrapper wrapper = null;
                             try {
@@ -131,26 +142,49 @@ public class ServerSender implements Runnable{
 
                             if (wrapper != null) {
                                 try {
-                                    System.out.println("ServerSender.run: <TIMED OUT> (serverbound) Wrapper is: " + wrapper.getPacket().getClass().getSimpleName() + " and isProcessed: " + wrapper.isProcessed);
+                                    timeAdded = System.currentTimeMillis(); // Reset time after handling timeouts
+                                    System.out.println("ServerSender.run: <TIMED OUT> (serverbound) Wrapper is: " + wrapper.getPacket().getClass().getSimpleName() + " and isProcessed: " + wrapper.isProcessed + " " + wrapper.getPacket().toString());
                                     packetSender.removePacket(wrapper.getPacket());
                                     queueNumberServerbound++;
-                                    timeAdded = currentTime; // Reset time after handling timeouts
+                                    break;
+//                                    timeAdded = System.currentTimeMillis(); // Reset time after handling timeouts
                                 } catch (Exception e) {
                                     System.out.println("Error removing packet: " + e.getMessage());
                                 }
+                            } else {
+                                System.out.println("ServerSender.run: <TIMED OUT> (serverbound) Wrapper is null");
+                                queueNumberServerbound++;
+                                timeAdded = currentTime;
+                                break;
+//                                timeAdded = currentTime; // Reset time after handling timeouts
                             }
                         }
                     }
 
-                    if (!packetSender.serverboundPacketQueue.containsKey(queueNumberServerbound) && queueNumberServerbound <= packetSender.queueNumberServerboundLast) {
-                        while (!packetSender.serverboundPacketQueue.containsKey(queueNumberServerbound)) {
+                    if (queueNumberServerbound < packetSender.queueNumberServerboundLast && !packetSender.serverboundPacketQueue.containsKey(queueNumberServerbound)) {
+//                        while (!packetSender.serverboundPacketQueue.containsKey(queueNumberServerbound)) {
+//                            queueNumberServerbound++;
+//                            timeAdded = currentTime; // Reset time after handling timeouts
+//                             Check if queueNumberServerbound has reached or exceeded the last queue number
+//                            if (queueNumberServerbound > packetSender.queueNumberServerboundLast) {
+//                                break; // Exit the loop if we have reached the end of the queue
+//                            }
+//                        }
+
+                        while (queueNumberServerbound < packetSender.queueNumberServerboundLast && !packetSender.serverboundPacketQueue.containsKey(queueNumberServerbound)) {
+                            System.out.println("Stuck");
+//                        System.out.println("Stuck in loop: User: " + clientInstances_PacketSenders.get(this.packetSender).getUsername() + " queueNumberClientbound: " + queueNumberClientbound + " queueNumberClientboundLast: " + queueNumberClientboundLast);
                             queueNumberServerbound++;
-                            timeAdded = currentTime; // Reset time after handling timeouts
-                            // Check if queueNumberServerbound has reached or exceeded the last queue number
-                            if (queueNumberServerbound > packetSender.queueNumberServerboundLast) {
-                                break; // Exit the loop if we have reached the end of the queue
-                            }
+//                            timeAdded = currentTime;
                         }
+//                    if (!packetSender.clientboundPacketQueue.containsKey(queueNumberClientbound)) {
+//                        queueNumberClientbound++;
+//                        break;
+//                    }
+//                        System.out.println("tewst");
+//                    Thread.sleep(1000);
+                        break;
+
                     }
 
                 } catch (Exception e) {

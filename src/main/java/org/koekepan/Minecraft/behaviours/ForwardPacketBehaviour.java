@@ -1,5 +1,6 @@
 package org.koekepan.Minecraft.behaviours;
 
+import org.koekepan.Performance.PacketCapture;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 import org.koekepan.VAST.Packet.Behaviour;
 import org.koekepan.VAST.Packet.PacketWrapper;
@@ -30,6 +31,7 @@ public class ForwardPacketBehaviour implements Behaviour<Packet> {
 			PacketWrapper packetWrapper = PacketWrapper.getPacketWrapper(packet);
 			if (packetWrapper != null) {
 				packetWrapper.setSPSPacket(spsPacket);
+//				PacketCapture.log(packet.getClass().getSimpleName() + "_" + packetWrapper.unique_id, PacketCapture.LogCategory.SERVERBOUND_BEH);
 			}
 			else {
 				//sleep for 5ms
@@ -40,6 +42,7 @@ public class ForwardPacketBehaviour implements Behaviour<Packet> {
                             Thread.sleep(50);
                             PacketWrapper packetWrapper2 = PacketWrapper.getPacketWrapper(packet);
                             packetWrapper2.setSPSPacket(spsPacket);
+//							PacketCapture.log(packet.getClass().getSimpleName() + "_" + packetWrapper2.unique_id, PacketCapture.LogCategory.SERVERBOUND_BEH_TIME);
                         } catch (InterruptedException e) {
 							System.out.println("ForwardPacketBehaviour for packet: <" + packet.getClass().getSimpleName() + "> failed getting packetWrapper: <" + e.getMessage() + ">");
 //                            e.printStackTrace();
