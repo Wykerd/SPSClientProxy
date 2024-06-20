@@ -13,6 +13,14 @@ public class AppConfig {
     private String vastHost;
     private int vastPort;
 
+    private String GateWayMatcherHost;
+    private int GateWayMatcherPort;
+    int GateWayMatcherXPosition;
+    int GateWayMatcherYPosition;
+
+    private String KoekepanBootHost; // Only for migration
+    private int KoekepanBootPort; // Only for migration
+
     public AppConfig() {
         loadProperties();
     }
@@ -29,6 +37,15 @@ public class AppConfig {
             port = Integer.parseInt(prop.getProperty("ProxyHostPort"));
             vastHost = prop.getProperty("VastComHost");
             vastPort = Integer.parseInt(prop.getProperty("VastComPort"));
+
+            GateWayMatcherHost = prop.getProperty("GateWayMatcherHost");
+            GateWayMatcherPort = Integer.parseInt(prop.getProperty("GateWayMatcherPort"));
+            GateWayMatcherXPosition = Integer.parseInt(prop.getProperty("GateWayMatcherXPosition"));
+            GateWayMatcherYPosition = Integer.parseInt(prop.getProperty("GateWayMatcherYPosition"));
+
+            KoekepanBootHost = prop.getProperty("KoekepanBootHost");
+            KoekepanBootPort = Integer.parseInt(prop.getProperty("KoekepanBootPort"));
+
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -49,6 +66,30 @@ public class AppConfig {
 
     public int getVastPort() {
         return vastPort;
+    }
+
+    public String getGateWayMatcherHost() {
+        return GateWayMatcherHost;
+    }
+
+    public int getGateWayMatcherPort() {
+        return GateWayMatcherPort;
+    }
+
+    public int getGateWayMatcherXPosition() {
+        return GateWayMatcherXPosition;
+    }
+
+    public int getGateWayMatcherYPosition() {
+        return GateWayMatcherYPosition;
+    }
+
+    public String getKoekepanBootHost() {
+        return KoekepanBootHost;
+    }
+
+    public int getKoekepanBootPort() {
+        return KoekepanBootPort;
     }
 
     // Main method for testing

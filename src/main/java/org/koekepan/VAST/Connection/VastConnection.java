@@ -13,15 +13,18 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import jdk.jfr.consumer.RecordedObject;
 import org.koekepan.App;
 import org.koekepan.Minecraft.ChunkPosition;
 import org.koekepan.Performance.PacketCapture;
 import org.koekepan.VAST.Connection.PacketSenderRunnables.ClientSender;
 import org.koekepan.VAST.Connection.PacketSenderRunnables.ServerSender;
+import org.koekepan.VAST.CustomPackets.EstablishConnectionPacket;
 import org.koekepan.VAST.Packet.PacketWrapper;
 import org.koekepan.VAST.Packet.SPSPacket;
 
 import static java.lang.Thread.sleep;
+import static org.koekepan.App.config;
 import static org.koekepan.VAST.Packet.PacketUtil.*;
 import static org.koekepan.VAST.Packet.PacketWrapper.packetWrapperMap;
 
@@ -100,10 +103,18 @@ public class VastConnection {
     }
 
     private void initialiseVASTclient() { // TODO: This subscribe should be more client-specific: (This is just for the login procedure)
-        socket.emit("spawn_VASTclient", "Minecraft Client 1", "10.42.0.1", "20000", "100", "100"); 
+
+
+        String gatewayMatcherHost = config.getGateWayMatcherHost();
+        int gatewayMatcherPort = config.getGateWayMatcherPort();
+        int gatewayMatcher_x = config.getGateWayMatcherXPosition();
+        int gatewayMatcher_y = config.getGateWayMatcherYPosition();
+
+//        socket.emit("spawn_VASTclient", "Minecraft Client 1", "10.42.0.1", "20000", "100", "100");
+        socket.emit("spawn_VASTclient", "MC 1", gatewayMatcherHost, Integer.toString(gatewayMatcherPort), gatewayMatcher_x, gatewayMatcher_y);
         
         try {
-            sleep(100);
+            sleep(1000);
 ////            this.subscribe(100, 100, 100000);
 //            this.clientInstance.startPermanentSubscriptions(100, 100);
         } catch (InterruptedException e) {
@@ -148,6 +159,10 @@ public class VastConnection {
                 PacketWrapper packetWrapper = new PacketWrapper(packet.packet);
                 packetWrapper.unique_id = unique_id;
 
+//                if (packet.packet.getClass().getSimpleName().equals("ServerChunkDataPacket")) {
+//                    System.out.println("CHUNK! received from VAST");
+//                }
+
                 if (packetWrapperMap.containsKey(packet.packet)) {
                 System.out.println("Packet already exists in packetWrapperMap, i.e. duplicate packet");
                 }
@@ -158,6 +173,9 @@ public class VastConnection {
 //                System.out.println(clientInstance.getUsername() + " received publication from vast matcher: <" + packet.packet.getClass().getSimpleName() + "> username: <" + username + "> channel: <" + packet.channel + ">");
 
                 if (packet.channel.equals(clientInstance.getUsername())) { // Player Specific Packets
+
+
+
                     PacketWrapper.setPlayerSpecific(packet.packet, clientInstance.getUsername());
                     clientInstance.getPacketSender().addClientboundPacket(packet.packet);
                     PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
@@ -231,7 +249,7 @@ public class VastConnection {
 
     public void publish(SPSPacket packet) { // sends to vast matcher as client
 
-//        System.out.println("Connection <"+uuid+"> sent packet <"+packet.packet.getClass().getSimpleName()+"> on channel <"+packet.channel+">");
+//        System.out.println("Connection <"+uuid+"> sent packet <"+packet.packet.getClass().getSimpleName()+"> on channel <"+packet.channel+"> at x: <"+packet.x+"> y: <"+packet.y+"> radius: <"+packet.radius+">");
 
         //convert to JSON
         Gson gson = new Gson();
@@ -239,11 +257,20 @@ public class VastConnection {
         String json = gson.toJson(payload);
         //ConsoleIO.println("Connection <"+connectionID+"> sent packet <"+packet.packet.getClass().getSimpleName()+"> on channel <"+packet.channel+">");
 
+        if (packet.packet.getClass().getSimpleName().equals("EstablishConnectionPacket")) {
+            System.out.println("EstablishConnectionPacket sent to VAST with: " + ((EstablishConnectionPacket) packet.packet).establishConnection());
+        }
+
 //        temp_pubcounter += 1;
 //        Logger.log(this, Logger.Level.DEBUG, new String[]{"counter", "clientPub"},"Amount of packets sent: " + temp_pubcounter + ": " + packet.packet.getClass().getSimpleName());
         PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.SERVERBOUND_OUT);
 //        socket.emit("publish", connectionID, packet.username, 100, 100, 10000, json, packet.channel); // TODO: AOI - This should not be hard coded, this is also wack
-        socket.emit("publish", connectionID, packet.username, this.clientInstance.getXPosition(), this.clientInstance.getYPosition(), 0, json, packet.channel);
+
+        if (packet.x == 0 && packet.y == 0) {
+            socket.emit("publish", connectionID, packet.username, this.clientInstance.getXPosition(), this.clientInstance.getYPosition(), 10, json, packet.channel); // Radius is 10, to ensure migration TODO: test
+        } else {
+            socket.emit("publish", connectionID, packet.username, packet.x, packet.y, packet.radius, json, packet.channel);
+        }
     }
 
 

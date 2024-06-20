@@ -14,9 +14,11 @@ import org.koekepan.VAST.Connection.VastConnection;
 import java.io.IOException;
 import java.util.HashMap;
 
+import static java.lang.Thread.sleep;
+
 public class App 
 {
-    static AppConfig config = new AppConfig();
+    public static AppConfig config = new AppConfig();
 //    config.loadProperties();
 
     // This is the server ip/port that the proxy will listen on (aka the server that is emulated)
@@ -26,6 +28,12 @@ public class App
     // This is the VAST_COM ip/port that the proxy will connect to (aka the sps client)
     static String vastHost = config.getVastHost();
     static int vastPort = config.getVastPort();
+
+//    public final static int gateWayServer_xPosition = config.getGateWayServer_xPosition();
+    public final static int gateWayServer_xPosition = 100;
+    public final static int gateWayServer_yPosition = 100;
+
+
 
     private static VastConnection vastConnection;
 
@@ -80,14 +88,17 @@ public class App
                     vastPort = vastPort + count;
                     String argument = Integer.toString(vastPort);
                     count = count + 1;
-                    ProcessBuilder processBuilder = new ProcessBuilder(command, argument, "> /dev/null 2>&1 &");
+                    ProcessBuilder processBuilder = new ProcessBuilder(command, argument, " &"); //> /dev/null 2>&1
                     // processBuilder.directory(new File("/path/to/working/directory"));
 
                     // Start the process in the background
                     try {
                         Process process = processBuilder.start();
                         System.out.println("VAST_com started in background with port: " + vastPort);
+                        sleep(300);
                     } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
                 }

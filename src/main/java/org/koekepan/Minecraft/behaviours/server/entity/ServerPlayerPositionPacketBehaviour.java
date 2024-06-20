@@ -1,5 +1,6 @@
 package org.koekepan.Minecraft.behaviours.server.entity;
 
+import com.github.steveice10.mc.protocol.packet.ingame.client.player.ClientPlayerPositionRotationPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.server.entity.player.ServerPlayerPositionRotationPacket;
 import com.github.steveice10.packetlib.packet.Packet;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
@@ -15,7 +16,29 @@ public class ServerPlayerPositionPacketBehaviour implements Behaviour<Packet> {
 
     @Override
     public void process(Packet packet) {
+//        System.out.println("ServerPlayerPositionPacketBehaviour::process => Player \""+clientInstance.getUsername()+"\" received location: "+packet.toString());
+
+        if (clientInstance.isMigrating()) {
+            ServerPlayerPositionRotationPacket p = (ServerPlayerPositionRotationPacket) packet;
+////            ConsoleIO.println("ServerPlayerPositionRotationPacket::process => Player \""+proxySession.getUsername()+"\" received location: "+p.toString());
+//            System.out.println("ServerPlayerPositionRotationPacket::process => Player \""+clientInstance.getUsername()+"\" received location: "+p.toString());
+//            ClientPlayerPositionRotationPacket responsePacket = new ClientPlayerPositionRotationPacket(true, p.getX(), p.getY(), p.getZ(), p.getYaw(), p.getPitch());
+
+            clientInstance.setMigarting(false);
+            PacketWrapper.setProcessed(packet, true);
+            System.out.println("ServerPlayerPositionPacketBehaviour::process => Player \""+clientInstance.getUsername()+"\" has finished migrating to the new server");
+            clientInstance.addChannelRegistration("Koekepan|migrate");
+
+//            ClientPlayerPositionRotationPacket responsePacket = new ClientPlayerPositionRotationPacket(true, p.getX(), p.getY(), p.getZ(), p.getYaw(), p.getPitch());
+//            clientInstance.getPacketSender().addServerboundPacket(responsePacket);
+//            clientInstance.getPacketSender().removePacket(packet);
+            return;
+        }
+
+
         PacketWrapper.setProcessed(packet, true);
+        clientInstance.addChannelRegistration("Koekepan|migrate");
+//        clientInstance.addChannelRegistration("Koekepan|kick");
 
         ServerPlayerPositionRotationPacket serverPlayerPositionPacket = (ServerPlayerPositionRotationPacket) packet;
 

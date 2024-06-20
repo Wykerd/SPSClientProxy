@@ -1,5 +1,6 @@
 package org.koekepan.Minecraft.behaviours.server.entity;
 
+import com.github.steveice10.mc.protocol.packet.ingame.server.entity.ServerEntityDestroyPacket;
 import com.github.steveice10.mc.protocol.packet.ingame.server.entity.spawn.ServerSpawnPlayerPacket;
 import com.github.steveice10.packetlib.packet.Packet;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
@@ -42,7 +43,15 @@ public class ServerSpawnPlayerPacketBehaviour implements Behaviour<Packet> {
                 PacketWrapper.packetWrapperMap.put(packet, newPacketWrapper);
 //            PacketWrapper.setProcessed(packet, true);
 //                System.out.println("THIS ONE 1 for USERNAME: " + clientInstance.getUsername());
+
+                ServerEntityDestroyPacket serverEntityDestroyPacket = new ServerEntityDestroyPacket(new int[]{serverSpawnPlayerPacketBehaviour.getEntityId()});
+                PacketWrapper packetWrapper1 = new PacketWrapper(serverEntityDestroyPacket, true);
+                PacketWrapper.packetWrapperMap.put(serverEntityDestroyPacket, packetWrapper1);
+                clientInstance.getPacketSender().addClientboundPacket(serverEntityDestroyPacket);
+
                 clientInstance.getPacketSender().addClientboundPacket(packet);
+
+                System.out.println("ServerSpawnPlayerPacketBehaviour::process => Spawned player <" + serverSpawnPlayerPacketBehaviour.getEntityId() + "> for user: <" + clientInstance.getUsername() + ">");
             } else {
                 System.out.println("ServerSpawnPlayerPacketBehaviour::process => PacketSender is null for user: <" + clientInstance.getUsername() + ">");
             }

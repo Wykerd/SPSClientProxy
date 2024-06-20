@@ -34,7 +34,9 @@ import com.github.steveice10.mc.protocol.packet.login.client.EncryptionResponseP
 import com.github.steveice10.mc.protocol.packet.status.client.StatusPingPacket;
 import com.github.steveice10.mc.protocol.packet.status.client.StatusQueryPacket;
 import com.github.steveice10.packetlib.packet.Packet;
+import org.koekepan.Minecraft.behaviours.client.ClientChatPacketBehaviour;
 import org.koekepan.Minecraft.behaviours.client.ClientPlayerMovementPacketBehaviour;
+import org.koekepan.Minecraft.behaviours.client.EstablishConnectionPacketBehaviour;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 import org.koekepan.VAST.CustomPackets.EstablishConnectionPacket;
 import org.koekepan.VAST.Packet.BehaviourHandler;
@@ -76,7 +78,7 @@ public class ServerBoundPacketBehaviours extends BehaviourHandler<Packet> {
 		registerBehaviour(EncryptionResponsePacket.class, serverForwarder);
 		registerBehaviour(ClientTeleportConfirmPacket.class, serverForwarder);
 		registerBehaviour(ClientTabCompletePacket.class, serverForwarder);
-		registerBehaviour(ClientChatPacket.class, serverForwarder);
+		registerBehaviour(ClientChatPacket.class, 						new ClientChatPacketBehaviour(clientInstance));
 		registerBehaviour(ClientRequestPacket.class, serverForwarder);
 		registerBehaviour(ClientSettingsPacket.class, serverForwarder);
 		registerBehaviour(ClientConfirmTransactionPacket.class, serverForwarder);
@@ -110,6 +112,6 @@ public class ServerBoundPacketBehaviours extends BehaviourHandler<Packet> {
 		registerBehaviour(StatusQueryPacket.class, serverForwarder);
 		registerBehaviour(StatusPingPacket.class, serverForwarder);
 
-		registerBehaviour(EstablishConnectionPacket.class, serverForwarder);  // Custom packet for establishing a connection (login) with the server
+		registerBehaviour(EstablishConnectionPacket.class,				new EstablishConnectionPacketBehaviour(clientInstance) );  // Custom packet for establishing a connection (login) with the server
 	}
 }

@@ -43,5 +43,7 @@ public class ServerLoginSuccessPacketBehaviour implements Behaviour<Packet> {
 		clientInstance.getPacketSender().removePacket(packet);
 
 		System.out.println("Player \""+loginSuccessPacket.getProfile().getName()+"\" has successfully logged into the remote server");
+
+		this.clientInstance.setUUID(loginSuccessPacket.getProfile().getId());
 	}
 }

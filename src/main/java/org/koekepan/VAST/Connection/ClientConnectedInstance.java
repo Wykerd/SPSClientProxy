@@ -3,6 +3,7 @@ package org.koekepan.VAST.Connection;
 import com.github.steveice10.mc.auth.data.GameProfile;
 import com.github.steveice10.mc.protocol.MinecraftProtocol;
 import com.github.steveice10.mc.protocol.data.game.chunk.Chunk;
+import com.github.steveice10.mc.protocol.packet.ingame.client.ClientPluginMessagePacket;
 import com.github.steveice10.mc.protocol.packet.login.client.LoginStartPacket;
 import com.github.steveice10.mc.protocol.packet.login.server.LoginSuccessPacket;
 import com.github.steveice10.packetlib.Session;
@@ -10,12 +11,15 @@ import com.github.steveice10.packetlib.event.session.ConnectedEvent;
 import com.github.steveice10.packetlib.event.session.PacketReceivedEvent;
 import com.github.steveice10.packetlib.event.session.SessionAdapter;
 import com.github.steveice10.packetlib.packet.Packet;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import org.koekepan.App;
 import org.koekepan.Minecraft.ChunkPosition;
 import org.koekepan.VAST.CustomPackets.EstablishConnectionPacket;
 import org.koekepan.VAST.Packet.PacketHandler;
 import org.koekepan.VAST.Packet.SPSPacket;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,11 +41,21 @@ public class ClientConnectedInstance {
     private int entityID = -1; // The entity ID of the player, if the player has joined the game (otherwise -1)
 
     public static HashMap<PacketSender, ClientConnectedInstance> clientInstances_PacketSenders = new HashMap<PacketSender, ClientConnectedInstance>();
-    public static HashSet<UUID> playerUUIDs = new HashSet<UUID>();
+//    public static HashSet<UUID> playerUUIDs = new HashSet<UUID>();
+
+    private UUID playerUUID = null;
+
     private String clientUsername;
 
     private int x_position = 0;
     private int y_position = 0;
+
+    private boolean migrating = false;
+
+    private String currentMinecratServerHost = null;
+    private int currentMinecraftServerPort = 0;
+    private String migratingMinecratServerHost = null;
+    private int migratingMinecraftServerPort = 0;
 
     public ClientConnectedInstance( Session session, String VastHost, int VastPort) {
         this.session = session;
@@ -82,16 +96,25 @@ public class ClientConnectedInstance {
         return packetHandler;
     }
 
-    public void addPlayerUUID(UUID id) {
-        playerUUIDs.add(id);
+//    public void addPlayerUUID(UUID id) {
+//        playerUUIDs.add(id);
+//    }
+//
+//    public void removePlayerUUID(UUID id) {
+//        playerUUIDs.remove(id);
+//    }
+
+//    public boolean hasPlayerUUID(UUID id) {
+//        return playerUUIDs.contains(id);
+//    }
+
+    public void setUUID(UUID id) {
+//        this.addPlayerUUID(id);
+        this.playerUUID = id;
     }
 
-    public void removePlayerUUID(UUID id) {
-        playerUUIDs.remove(id);
-    }
-
-    public boolean hasPlayerUUID(UUID id) {
-        return playerUUIDs.contains(id);
+    public UUID getUUID() {
+        return playerUUID;
     }
 
     private static class ClientSessionListener extends SessionAdapter { // This is the client listener (Listens to the packets sent/received from client)
@@ -111,6 +134,13 @@ public class ClientConnectedInstance {
                 String username = startPacket.getUsername();
 
                 System.out.println("EmulatedServer: Received login packet from " + username);
+
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
                 App.clientInstances.get(event.getSession()).setClientUsername(username);
 
 //                App.clientInstances.get(event.getSession()).startPermanentSubscriptions(150, 150);
@@ -167,6 +197,24 @@ public class ClientConnectedInstance {
 
     public void setJoined(Boolean joined) {
         this.joined = joined;
+
+//        this.addChannelRegistration("Koekepan|migrate");
+//        this.addChannelRegistration("Koekepan|kick");
+//        this.addChannelRegistration("Koekepan|partition");
+//        this.addChannelRegistration("Koekepan|latency");
+    }
+
+    public void addChannelRegistration(String channel) {
+        byte[] payload = writeStringToPluginMessageData(channel);
+        String registerMessage = "REGISTER";
+        ClientPluginMessagePacket registerPacket = new ClientPluginMessagePacket(registerMessage, payload);
+        this.packetSender.addServerboundPacket(registerPacket);
+    }
+    private byte[] writeStringToPluginMessageData(String message) {
+        byte[] data = message.getBytes(StandardCharsets.UTF_8);
+        ByteBuf buff = Unpooled.buffer();
+        buff.writeBytes(data);
+        return buff.array();
     }
 
     public boolean isJoined() {
@@ -229,7 +277,15 @@ public class ClientConnectedInstance {
         return y_position;
     }
 
+
+    private Boolean permanentSubscriptionsStarted = false;
     public void startPermanentSubscriptions(double x, double z) {
+
+        if (permanentSubscriptionsStarted) {
+            return;
+        }
+        permanentSubscriptionsStarted = true;
+
 //        this.vastConnection.unsubscribe(this.getUsername());
 //        this.vastConnection.subscribeMobile((int)x, (int)z, 100, this.getUsername());
 //        this.vastConnection.subscribeMobilePolygon(getSquare((int)x, (int)z, (21*16 + 16*2)), this.getUsername()); // Dit is waar hy die chunks en specific userbound packets receive
@@ -324,5 +380,69 @@ public class ClientConnectedInstance {
 //        App.stop();
 //        clientInstances_PacketSenders.remove(this);
 //        App.clientInstances.remove(this);
+    }
+
+    public void setMigarting(boolean migrating) {
+        this.migrating = migrating;
+    }
+
+    public boolean isMigrating() {
+        return migrating;
+    }
+
+    public void setMinecraftServer(String host, int port) {
+        this.currentMinecratServerHost = host;
+        this.currentMinecraftServerPort = port;
+    }
+
+    public String getMinecraftServerHost() {
+        return currentMinecratServerHost;
+    }
+
+    public int getMinecraftServerPort() {
+        return currentMinecraftServerPort;
+    }
+
+    public void setMigratingMinecraftServer(String host, int port) {
+        this.migratingMinecratServerHost = host;
+        this.migratingMinecraftServerPort = port;
+    }
+
+    public String getMigratingMinecraftServerHost() {
+        return migratingMinecratServerHost;
+    }
+
+    public int getMigratingMinecraftServerPort() {
+        return migratingMinecraftServerPort;
+    }
+
+    // Variable to save the current time
+    private long migrationStartTime = System.currentTimeMillis();
+
+    public void migrate(String host, int port) { // Minecraft Specific
+
+        // If migratoinStartTime is more than 1 second ago, then the migration has timed out
+        if (System.currentTimeMillis() - migrationStartTime > 1000) {
+            System.out.println("ClientConnectedInstance::migrate => Player <"+getUsername()+"> migration has timed out");
+            this.setMigarting(false);
+//            return;
+        }
+
+        if (isMigrating()) {
+            System.out.println("ClientConnectedInstance::migrate => Player <"+getUsername()+"> is already migrating to a new server");
+            return;
+        }
+
+
+        this.setMigratingMinecraftServer(host, port);
+
+        System.out.println("ClientConnectedInstance::migrate => Migrating player <"+getUsername()+"> to new server <"+host+":"+port+">");
+        // Connect to new MINECRAFT server with user, without switching client - client will switch after connection has finalised
+        EstablishConnectionPacket establishConnectionPacket = new EstablishConnectionPacket(getUsername(), true, host, port);
+
+        this.setMigarting(true);
+        migrationStartTime = System.currentTimeMillis();
+
+        packetSender.addServerboundPacket(establishConnectionPacket); // Needs to be serverBound to new server TODO add ip info to packet so that serverproxy knows that this is a for it
     }
 }
