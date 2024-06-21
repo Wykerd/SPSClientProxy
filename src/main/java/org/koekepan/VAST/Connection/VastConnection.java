@@ -6,6 +6,8 @@ import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -20,6 +22,7 @@ import org.koekepan.Performance.PacketCapture;
 import org.koekepan.VAST.Connection.PacketSenderRunnables.ClientSender;
 import org.koekepan.VAST.Connection.PacketSenderRunnables.ServerSender;
 import org.koekepan.VAST.CustomPackets.EstablishConnectionPacket;
+import org.koekepan.VAST.CustomPackets.PINGPONG;
 import org.koekepan.VAST.Packet.PacketWrapper;
 import org.koekepan.VAST.Packet.SPSPacket;
 
@@ -156,6 +159,41 @@ public class VastConnection {
                 int y = packet.y;
                 int radius = packet.radius;
 
+                //// PINGPONG HANDLING //////////////////////////
+                if (packet.packet instanceof PINGPONG) {
+                    System.out.println("Received PINGPONG packet");
+                    PINGPONG pingpong = (PINGPONG) packet.packet;
+//                    if (pingpong.getType() == PINGPONG.Type.PING) {
+//                        if (pingpong.getOrigin() == PINGPONG.Origin.CLIENT_VAST_COM) {
+//                            if (pingpong.getDirection() == PINGPONG.Direction.SERVER_VAST_COM) {
+//                                System.out.println("Received PING from VAST_COM");
+//                                PINGPONG pong = new PINGPONG(PINGPONG.Direction.CLIENT_VAST_COM, PINGPONG.Origin.SERVER_VAST_COM, PINGPONG.Type.PONG);
+//                                pong.addPropogation(PINGPONG.Origin.CLIENT_VAST_COM);
+//                                SPSPacket pongPacket = new SPSPacket(pong, "clientBound", x, y, radius, username);
+//                                publish(pongPacket);
+//                            }
+//                        }
+//                    }
+//                    else
+                        if (pingpong.getType() == PINGPONG.Type.PONG) {
+                            if (pingpong.getOrigin() == PINGPONG.Origin.ServerProxy) {
+                                if (pingpong.getDirection() == PINGPONG.Direction.CLIENTBOUND) {
+                                    if (pingpong.getPingOriginServerID().equals(PINGPONG.serverUUID)) {
+                                        Duration duration = Duration.between(pingpong.getInitTime(), Instant.now());
+                                        System.out.println("Complete round trip duration: " + duration.toMillis() + "ms");
+                                        PacketCapture.log("PONG_" + unique_id, PacketCapture.LogCategory.CLIENTBOUND_PONG_IN);
+                                    }
+    //                                System.out.println("Received PONG from VAST_COM");
+    //                                PacketCapture.log("PONG_" + unique_id, PacketCapture.LogCategory.PONG_IN);
+
+
+                                }
+                            }
+                    }
+                    return;
+                }
+                ////////////////////////////////////////////////
+
                 PacketWrapper packetWrapper = new PacketWrapper(packet.packet);
                 packetWrapper.unique_id = unique_id;
 
@@ -247,6 +285,10 @@ public class VastConnection {
         socket.emit("subscribe_mobile_polygon", jsonPositions, channel);
     }
 
+
+    //Variable to save time of previous ping
+    private Instant lastPing = Instant.now();
+
     public void publish(SPSPacket packet) { // sends to vast matcher as client
 
 //        System.out.println("Connection <"+uuid+"> sent packet <"+packet.packet.getClass().getSimpleName()+"> on channel <"+packet.channel+"> at x: <"+packet.x+"> y: <"+packet.y+"> radius: <"+packet.radius+">");
@@ -259,6 +301,22 @@ public class VastConnection {
 
         if (packet.packet.getClass().getSimpleName().equals("EstablishConnectionPacket")) {
             System.out.println("EstablishConnectionPacket sent to VAST with: " + ((EstablishConnectionPacket) packet.packet).establishConnection());
+        }
+
+        // If 2 seconds past since last ping, ping again
+        if (Duration.between(lastPing, Instant.now()).compareTo(Duration.ofSeconds(1)) >= 0) {
+            // Code to send another ping
+//            SPSPacket pingPacket = new SPSPacket(ping, "serverBound", this.clientInstance.getXPosition(), this.clientInstance.getYPosition(), 0,
+//                    this.clientInstance.getUsername() + "&" + UUID.randomUUID().toString() + "&MATCHERPING");
+            PacketCapture.log("PING_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.SERVERBOUND_PING_OUT);
+            PINGPONG ping = new PINGPONG(PINGPONG.Direction.SERVERBOUND, PINGPONG.Origin.ClientProxy, PINGPONG.Type.PING);
+            socket.emit("publish", connectionID,
+                    this.clientInstance.getUsername() + "&" + PacketWrapper.get_unique_id(packet.packet) + "&MATCHERPING",
+                    this.clientInstance.getXPosition(),
+                    this.clientInstance.getYPosition(),
+                    0,
+                    gson.toJson(packetToBytes(ping)), "serverBound");
+            lastPing = Instant.now(); // Update the lastPing time
         }
 
 //        temp_pubcounter += 1;

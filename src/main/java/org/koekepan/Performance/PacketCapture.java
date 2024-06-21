@@ -28,6 +28,10 @@ public class PacketCapture {
         SERVERBOUND_BEH,
         PACKET_BEH_HANDLER,
         SERVERBOUND_QUEUE,
+
+
+        CLIENTBOUND_PONG_IN,
+        SERVERBOUND_PING_OUT,
     }
 
     // Directory where logs will be stored
@@ -149,6 +153,12 @@ public class PacketCapture {
                 break;
             case SERVERBOUND_QUEUE:
                 filename = "cp_serverbound_queue.csv";
+                break;
+            case CLIENTBOUND_PONG_IN:
+                filename = "cp_clientbound_pong_in_packet_log.csv";
+                break;
+            case SERVERBOUND_PING_OUT:
+                filename = "cp_serverbound_ping_out_packet_log.csv";
                 break;
         }
         return LOG_DIR + filename;
