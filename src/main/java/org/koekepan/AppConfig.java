@@ -18,6 +18,8 @@ public class AppConfig {
     int GateWayMatcherXPosition;
     int GateWayMatcherYPosition;
 
+    private String LogHostName;
+
     private String KoekepanBootHost; // Only for migration
     private int KoekepanBootPort; // Only for migration
 
@@ -45,6 +47,8 @@ public class AppConfig {
 
             KoekepanBootHost = prop.getProperty("KoekepanBootHost");
             KoekepanBootPort = Integer.parseInt(prop.getProperty("KoekepanBootPort"));
+
+            LogHostName = prop.getProperty("LogHostName");
 
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -90,6 +94,10 @@ public class AppConfig {
 
     public int getKoekepanBootPort() {
         return KoekepanBootPort;
+    }
+
+    public String getLogHostName() {
+        return LogHostName;
     }
 
     // Main method for testing

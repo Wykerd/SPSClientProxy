@@ -8,6 +8,7 @@ import org.koekepan.Minecraft.behaviours.server.ServerUnloadChunkPacketBehaviour
 import org.koekepan.Minecraft.behaviours.server.entity.*;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 import org.koekepan.VAST.CustomPackets.EstablishConnectionPacket;
+import org.koekepan.VAST.CustomPackets.PINGPONG;
 import org.koekepan.VAST.Packet.BehaviourHandler;
 
 import com.github.steveice10.mc.protocol.packet.ingame.server.*;
@@ -151,6 +152,9 @@ public class ClientBoundPacketBehaviours extends BehaviourHandler<Packet> {
 
 		registerBehaviour(ServerPluginMessagePacket.class, new ServerPluginMessagePacketBehaviour(clientInstance));
 //		registerBehaviour(ServerPluginMessagePacket.class, new ServerPluginMessagePacketBehaviour(clientInstance));
+
+
+		registerBehaviour(PINGPONG.class, new PINGPONGBehaviour(clientInstance));
 	}
 	
 	

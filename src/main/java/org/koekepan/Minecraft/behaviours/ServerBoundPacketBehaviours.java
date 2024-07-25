@@ -39,6 +39,7 @@ import org.koekepan.Minecraft.behaviours.client.ClientPlayerMovementPacketBehavi
 import org.koekepan.Minecraft.behaviours.client.EstablishConnectionPacketBehaviour;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 import org.koekepan.VAST.CustomPackets.EstablishConnectionPacket;
+import org.koekepan.VAST.CustomPackets.PINGPONG;
 import org.koekepan.VAST.Packet.BehaviourHandler;
 
 public class ServerBoundPacketBehaviours extends BehaviourHandler<Packet> {
@@ -113,5 +114,7 @@ public class ServerBoundPacketBehaviours extends BehaviourHandler<Packet> {
 		registerBehaviour(StatusPingPacket.class, serverForwarder);
 
 		registerBehaviour(EstablishConnectionPacket.class,				new EstablishConnectionPacketBehaviour(clientInstance) );  // Custom packet for establishing a connection (login) with the server
+
+		registerBehaviour(PINGPONG.class, new PINGPONGBehaviour(clientInstance));
 	}
 }

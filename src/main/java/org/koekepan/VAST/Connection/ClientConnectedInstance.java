@@ -15,11 +15,14 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.koekepan.App;
 import org.koekepan.Minecraft.ChunkPosition;
+import org.koekepan.Performance.PacketCapture;
 import org.koekepan.VAST.CustomPackets.EstablishConnectionPacket;
 import org.koekepan.VAST.Packet.PacketHandler;
 import org.koekepan.VAST.Packet.SPSPacket;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -234,40 +237,41 @@ public class ClientConnectedInstance {
         this.entityID = entityID;
     }
 
-    boolean created_mobile_subscription = false;
 
+    int publishMoveCount = 10;
     public void set_position(int x, int y) { // TODO: This is currently done in the serverBound packet, think about moveing it to the clientBound packet
         if (this.x_position == x && this.y_position == y) {
             return;
         }
 
+//        System.out.println("ClientConnectedInstance::set_position => Player <"+getUsername()+"> is moving to x: "+x+" z: "+y);
+
         this.x_position = x;
         this.y_position = y;
 
-        this.vastConnection.publishMove(x, y);
+        // Publish move every 10th move
+//        if (publishMoveCount++ % 10 != 0) {
+        if (x != 8) {
+            this.vastConnection.publishMove(x, y);
+        }
+//            publishMoveCount = 0;
+//        }
 
-        if (!created_mobile_subscription) {
-//            this.vastConnection.subscribeMobile(x, y, 100, "username");
+    }
 
-//            // Create an ArrayList to hold ChunkPosition objects
-//            ArrayList<ChunkPosition> square = new ArrayList<>();
-//
-//            // Define the side length and calculate the start and end points
-//            int sideLength = 50;
-//            int halfLength = sideLength / 2;
-//
-//            // Populate the ArrayList with ChunkPosition objects
-//            for (int x_ = -halfLength; x_ < halfLength; x_++) {
-//                for (int y_ = -halfLength; y_ < halfLength; y_++) {
-//                    square.add(new ChunkPosition(x_, y_));
-//                }
-//            }
-//
-//            this.vastConnection.subscribeMobilePolygon( square, "username2");
-//
-            created_mobile_subscription = true;
+    public void set_position(int x, int y, boolean forcePublish) {
+        if (this.x_position == x && this.y_position == y) {
+            return;
         }
 
+//        System.out.println("ClientConnectedInstance::set_position forcePublish => Player <"+getUsername()+"> is moving to x: "+x+" z: "+y);
+
+        this.x_position = x;
+        this.y_position = y;
+
+        if (forcePublish) {
+            this.vastConnection.publishMove(x, y);
+        }
     }
 
     public int getXPosition() {
@@ -286,8 +290,33 @@ public class ClientConnectedInstance {
         }
         permanentSubscriptionsStarted = true;
 
+
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.scheduleAtFixedRate(() -> {
+            if (!this.migrating) {
+                // if lastReceivedPacket is more than 5 seconds ago
+                if (Duration.between(this.vastConnection.lastReceivedPacket, Instant.now()).compareTo(Duration.ofSeconds(3)) >= 0) {
+//                    startPermanentSubscriptions(true);
+//                    PacketCapture.log(
+//                            this.getUsername(),
+//                            message,
+//                            PacketCapture.LogCategory.
+//                    );
+                }
+            }
+        }, 10, 1, TimeUnit.SECONDS);
+
+
+        this.vastConnection.unsubscribe("clientBound"); // Should not have any clientBound subscriptions
+//        this.vastConnection.subscribeMobilePolygon(getSquare((int)x, (int)z, (21*16 + 16*2)), "clientBound"); // Each chunk is 16x16, so 21 chunks is 21*16, and 16*2 is the extra 2 chunks on each side as a buffer
+        this.vastConnection.subscribeMobile((int) x, (int) z, 80, "clientBound"); // TODO: Change to square (5*12) or something
+
+
+        // Dangerous! TODO: test
 //        this.vastConnection.unsubscribe(this.getUsername());
-//        this.vastConnection.subscribeMobile((int)x, (int)z, 100, this.getUsername());
+        this.vastConnection.subscribeMobile((int) x, (int) z, 10, this.getUsername());
+
+
 //        this.vastConnection.subscribeMobilePolygon(getSquare((int)x, (int)z, (21*16 + 16*2)), this.getUsername()); // Dit is waar hy die chunks en specific userbound packets receive
 //        this.vastConnection.subscribeMobilePolygon(getSquare((int)x, (int)z, (21*16 + 16*2)), this.getUsername()); // Dit is waar hy die chunks en specific userbound packets receive
 
@@ -295,10 +324,22 @@ public class ClientConnectedInstance {
 
 //        this.vastConnection.subscribe(0,0,10, this.getUsername()); // This happens in setClientUsername!
 
-        this.vastConnection.unsubscribe("clientBound"); // Should not have any clientBound subscriptions
-//        this.vastConnection.subscribeMobilePolygon(getSquare((int)x, (int)z, (21*16 + 16*2)), "clientBound"); // Each chunk is 16x16, so 21 chunks is 21*16, and 16*2 is the extra 2 chunks on each side as a buffer
-        this.vastConnection.subscribeMobile((int)x, (int)z, 80, "clientBound"); // TODO: Change to square (5*12) or something
+//        this.vastConnection.unsubscribe("clientBound"); // Should not have any clientBound subscriptions
+////        this.vastConnection.subscribeMobilePolygon(getSquare((int)x, (int)z, (21*16 + 16*2)), "clientBound"); // Each chunk is 16x16, so 21 chunks is 21*16, and 16*2 is the extra 2 chunks on each side as a buffer
+//        this.vastConnection.subscribeMobile((int)x, (int)z, 80, "clientBound"); // TODO: Change to square (5*12) or something
 //        this.vastConnection.subscribeMobile((int)x, (int)z, 10000, "clientBound");
+    }
+
+    public void startPermanentSubscriptions(boolean force) {
+        if (force) {
+            this.vastConnection.unsubscribe("clientBound"); // Should not have any clientBound subscriptions
+            this.vastConnection.subscribeMobile((int) this.getXPosition(), (int) this.getYPosition(), 80, "clientBound"); // TODO: Change to square (5*12) or something
+            this.vastConnection.unsubscribe(this.getUsername());
+            this.vastConnection.subscribe(0, 0, 10, this.getUsername());
+
+        } else {
+            startPermanentSubscriptions(this.getXPosition(), this.getYPosition());
+        }
     }
 
     private static ArrayList<ChunkPosition> getSquare(int x, int z, int sideLength) {

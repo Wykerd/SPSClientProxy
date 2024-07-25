@@ -42,7 +42,16 @@ public class ServerPlayerPositionPacketBehaviour implements Behaviour<Packet> {
 
         ServerPlayerPositionRotationPacket serverPlayerPositionPacket = (ServerPlayerPositionRotationPacket) packet;
 
-        this.clientInstance.set_position((int) serverPlayerPositionPacket.getX(), (int) serverPlayerPositionPacket.getZ());
+        this.clientInstance.set_position((int) serverPlayerPositionPacket.getX(), (int) serverPlayerPositionPacket.getZ(), true);
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        System.out.println("Starting permanent subscription at x: "+serverPlayerPositionPacket.getX()+" z: "+serverPlayerPositionPacket.getZ());
         clientInstance.startPermanentSubscriptions(serverPlayerPositionPacket.getX(), serverPlayerPositionPacket.getZ());
     }
 }

@@ -1,5 +1,7 @@
 package org.koekepan.Performance;
 
+import org.koekepan.App;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -62,7 +64,7 @@ public class PacketCapture {
     }
 
     // Synchronized to make it thread-safe
-    public static synchronized void log(String message, LogCategory category) {
+    private static synchronized void logs(String message, LogCategory category) {
 //        return;
         FileWriter fileWriter = null;
         String targetFilename = getFilenameByCategory(category);
@@ -100,6 +102,16 @@ public class PacketCapture {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static synchronized void log(String Username, String message, LogCategory category) {
+        message = message + ", "  + Username + ", " +  App.config.getLogHostName(); // Username is not NULL
+        log(message, category);
+    }
+
+    public static synchronized void log(String message, LogCategory category) {
+        message = message + ", NULL , " + App.config.getLogHostName(); // Username is NULL
+        logs(message, category);
     }
 
     // Helper method to get filename based on log category

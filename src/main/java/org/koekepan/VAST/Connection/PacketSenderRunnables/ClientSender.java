@@ -5,6 +5,7 @@ import com.github.steveice10.packetlib.packet.Packet;
 import org.koekepan.Performance.PacketCapture;
 import org.koekepan.VAST.Connection.ClientConnectedInstance;
 import org.koekepan.VAST.Connection.PacketSender;
+import org.koekepan.VAST.CustomPackets.PINGPONG;
 import org.koekepan.VAST.Packet.PacketWrapper;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +31,7 @@ public class ClientSender implements Runnable{
             long timeAdded = System.currentTimeMillis();
 
             while (!packetSender.clientboundPacketQueue.isEmpty()) {
+                boolean dosleep = true;
 //                Thread.sleep(5);
 //                System.out.println("Length of queue for client " + clientInstances_PacketSenders.get(this.packetSender).getUsername()  + ": " + packetSender.clientboundPacketQueue.size());
 //            while (true) {
@@ -61,15 +63,16 @@ public class ClientSender implements Runnable{
                                 System.out.println("ClientSender.run: Packet is null");
                                 return;
                             }
-                            if (this.clientSession.isConnected()) {
+                            if (this.clientSession.isConnected() && !(packet instanceof PINGPONG)) {
                                 this.clientSession.send(wrapper.getPacket());
                             }
-                            PacketCapture.log(wrapper.getPacket().getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(wrapper.getPacket()), PacketCapture.LogCategory.CLIENTBOUND_OUT);
+                            PacketCapture.log(clientInstances_PacketSenders.get(packetSender).getUsername(),wrapper.getPacket().getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(wrapper.getPacket()), PacketCapture.LogCategory.CLIENTBOUND_OUT);
 ////                        System.out.println("ClientSender.run: " + wrapper.getPacket().getClass().getSimpleName() + " sent to client: " + clientInstances_PacketSenders.get(this.packetSender).getUsername());
 //
                             packetSender.removePacket(wrapper.getPacket());
                             timeAdded = System.currentTimeMillis(); // Reset time after sending a packet
                             queueNumberClientbound++;
+                            dosleep = false;
 //                            break;
                         }
 
@@ -91,6 +94,7 @@ public class ClientSender implements Runnable{
 //                            PacketCapture.log(wrapper.getPacket().getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(wrapper.getPacket()), PacketCapture.LogCategory.DELETED_PACKETS_TIME);
                             packetSender.removePacket(wrapper.getPacket());
                             queueNumberClientbound++;
+                            dosleep = false;
                             timeAdded = currentTime; // Reset time after handling timeouts
                         }
                         else{
@@ -102,17 +106,19 @@ public class ClientSender implements Runnable{
                 // Check if the queue number has reached or exceeded the last queue number and increment until a packet is found
                 if (queueNumberClientbound < packetSender.queueNumberClientboundLast && !packetSender.clientboundPacketQueue.containsKey(queueNumberClientbound)) {
 //                    while (!packetSender.clientboundPacketQueue.containsKey(queueNumberClientbound)) {
-                    while (queueNumberClientbound < packetSender.queueNumberClientboundLast && !packetSender.clientboundPacketQueue.containsKey(queueNumberClientbound)) {
+//                    while (queueNumberClientbound < packetSender.queueNumberClientboundLast && !packetSender.clientboundPacketQueue.containsKey(queueNumberClientbound)) {
 //                        System.out.println("Stuck in loop: User: " + clientInstances_PacketSenders.get(this.packetSender).getUsername() + " queueNumberClientbound: " + queueNumberClientbound + " queueNumberClientboundLast: " + queueNumberClientboundLast);
                         queueNumberClientbound++;
-                    }
+                        dosleep = false;
+                        timeAdded = currentTime;
+//                    }
 //                    if (!packetSender.clientboundPacketQueue.containsKey(queueNumberClientbound)) {
 //                        queueNumberClientbound++;
 //                        break;
 //                    }
 //                        System.out.println("tewst");
 //                    Thread.sleep(1000);
-                    break;
+//                    break;
 //                        timeAdded = currentTime; // Reset time after handling timeouts
 
 //                        System.out.println("ClientSender.run: <INCREMENT> (clientbound) 1 for username: " + clientInstances_PacketSenders.get(this.packetSender).getUsername());
@@ -122,6 +128,10 @@ public class ClientSender implements Runnable{
 //                            break; // Exit the loop if we have reached the end of the queue
 //                        }
 //                    }
+                }
+
+                if (dosleep) {
+                    Thread.sleep(1);
                 }
             }
         } catch (Exception e) {

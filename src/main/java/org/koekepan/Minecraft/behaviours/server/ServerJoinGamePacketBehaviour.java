@@ -90,7 +90,7 @@ public class ServerJoinGamePacketBehaviour implements Behaviour<Packet> {
 
 //		PacketWrapper.setProcessed(packet, true);
 		clientInstance.getSession().send(packet);
-		PacketCapture.log(packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet), PacketCapture.LogCategory.CLIENTBOUND_OUT);
+		PacketCapture.log( clientInstance.getUsername(), packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet), PacketCapture.LogCategory.CLIENTBOUND_OUT);
 		clientInstance.getPacketSender().removePacket(packet);
 
 		clientInstance.getPacketSender().startClientSender();

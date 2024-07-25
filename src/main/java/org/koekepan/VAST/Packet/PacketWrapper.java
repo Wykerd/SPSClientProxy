@@ -100,6 +100,15 @@ public class PacketWrapper {
         return packetWrapper;
     }
 
+    public static boolean getPacketWrapper(String Unique_id) {
+        for (PacketWrapper packetWrapper : packetWrapperMap.values()) {
+            if (packetWrapper.unique_id.equals(Unique_id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static PacketWrapper getPacketWrapperByQueueNumber(ConcurrentHashMap<Integer, PacketWrapper> map, int queueNumber) {
         return map.get(queueNumber);
     }

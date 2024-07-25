@@ -55,10 +55,29 @@ public final class PacketUtil {
             int x = payloadObject.getInt("x");
             int y = payloadObject.getInt("y");
             int radius = payloadObject.getInt("radius");
-            String publication = payloadObject.getString("actualPacket");
+
+            Packet packet = null;
+            if (payloadObject.get("actualPacket") instanceof byte[]) {
+                byte[] actualPacket = (byte[]) payloadObject.get("actualPacket");
+                packet = bytesToPacket(actualPacket);
+
+            } else if (payloadObject.get("actualPacket") instanceof org.json.JSONObject) { // When packet is sent to more than one matcher, it gets changes to jsonObject not byte[]
+//                System.out.println("PacketUtil::receivePublication => actualPacket is JSONObject");
+                org.json.JSONObject actualPacketObj = (org.json.JSONObject) payloadObject.get("actualPacket");
+                org.json.JSONArray dataArray = actualPacketObj.getJSONArray("data");
+                byte[] bufferBytes = new byte[dataArray.length()];
+                // Iterate over the array, converting each integer into a byte
+                for (int i = 0; i < dataArray.length(); i++) {
+                    int value = dataArray.getInt(i);
+                    bufferBytes[i] = (byte) value;
+                }
+//                System.out.println("PacketUtil::receivePublication => actualPacketString: "+actualPacketString);
+                packet = bytesToPacket(bufferBytes);
+            }
+
             String channel = payloadObject.getString("channel");
 
-            Packet packet = retrievePacket(publication);
+//            Packet packet = retrievePacket(publication);
 
             spsPacket = new SPSPacket(packet, userName, x, y, radius, channel);
 //				public SPSPacket(Packet packet, String username, int x, int y, int radius, String channel) {

@@ -2,6 +2,7 @@ package org.koekepan.VAST.Connection;
 
 import com.github.steveice10.packetlib.Session;
 import com.github.steveice10.packetlib.packet.Packet;
+import org.koekepan.App;
 import org.koekepan.Performance.PacketCapture;
 import org.koekepan.VAST.Connection.PacketSenderRunnables.ClientSender;
 import org.koekepan.VAST.Connection.PacketSenderRunnables.ServerSender;
@@ -119,11 +120,24 @@ public class PacketSender implements Runnable { // This is the packet sender, it
 
 //        System.out.println("PacketSender.addServerboundPacket: " + packet.getClass().getSimpleName());
         packetWrapper.queueNumber = ++queueNumberServerboundLast;
-        packetWrapper.unique_id = "SB" + UUID.randomUUID().toString().substring(0, 4) + queueNumberServerboundLast;
+        packetWrapper.unique_id = "SB" + UUID.randomUUID().toString().substring(0, 4) + queueNumberServerboundLast + App.config.getLogHostName();
         serverboundPacketQueue.put(queueNumberServerboundLast, packetWrapper);
 
         clientInstances_PacketSenders.get(this).getPacketHandler().addPacket(packetWrapper);
-        PacketCapture.log(packet.getClass().getSimpleName() + "_" + packetWrapper.unique_id, PacketCapture.LogCategory.SERVERBOUND_IN);
+        PacketCapture.log( clientInstances_PacketSenders.get(this).getUsername(), packet.getClass().getSimpleName() + "_" + packetWrapper.unique_id, PacketCapture.LogCategory.SERVERBOUND_IN);
+    }
+
+    public void addServerboundPacket(Packet packet, String unique_id) {
+        PacketWrapper packetWrapper = new PacketWrapper(packet);
+        packetWrapper.clientBound = false;
+        packetWrapperMap.put(packet, packetWrapper);
+
+        packetWrapper.queueNumber = ++queueNumberServerboundLast;
+        packetWrapper.unique_id = unique_id;
+        serverboundPacketQueue.put(queueNumberServerboundLast, packetWrapper);
+
+        clientInstances_PacketSenders.get(this).getPacketHandler().addPacket(packetWrapper);
+        PacketCapture.log(clientInstances_PacketSenders.get(this).getUsername(), packet.getClass().getSimpleName() + "_" + packetWrapper.unique_id, PacketCapture.LogCategory.SERVERBOUND_IN);
     }
 
     public void setClientSession(Session session) {
@@ -241,7 +255,7 @@ public class PacketSender implements Runnable { // This is the packet sender, it
             }
         }
 
-        PacketCapture.log(packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet), PacketCapture.LogCategory.DELETED_PACKETS);
+        PacketCapture.log(clientInstances_PacketSenders.get(this).getUsername(),packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet), PacketCapture.LogCategory.DELETED_PACKETS);
         PacketWrapper.removePacketWrapper(packet);
     }
 

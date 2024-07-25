@@ -86,6 +86,7 @@ public class ServerSender implements Runnable{
         try {
 //            System.out.println(packetSender.serverboundPacketQueue.isEmpty());
             while (!packetSender.serverboundPacketQueue.isEmpty()) {
+                boolean dosleep = true;
 //                Thread.sleep(5);
 //            while (true) {
 //            System.out.println("Test");
@@ -123,6 +124,7 @@ public class ServerSender implements Runnable{
                             try {
                                 timeAdded = System.currentTimeMillis(); // Reset time after sending a packet
                                 queueNumberServerbound++;
+                                dosleep = false;
                             } catch (Exception e) {
                                 System.out.println("Error: " + e.getMessage());
                             }
@@ -146,6 +148,7 @@ public class ServerSender implements Runnable{
                                     System.out.println("ServerSender.run: <TIMED OUT> (serverbound) Wrapper is: " + wrapper.getPacket().getClass().getSimpleName() + " and isProcessed: " + wrapper.isProcessed + " " + wrapper.getPacket().toString());
                                     packetSender.removePacket(wrapper.getPacket());
                                     queueNumberServerbound++;
+                                    dosleep = false;
                                     break;
 //                                    timeAdded = System.currentTimeMillis(); // Reset time after handling timeouts
                                 } catch (Exception e) {
@@ -154,6 +157,7 @@ public class ServerSender implements Runnable{
                             } else {
                                 System.out.println("ServerSender.run: <TIMED OUT> (serverbound) Wrapper is null");
                                 queueNumberServerbound++;
+                                dosleep = false;
                                 timeAdded = currentTime;
                                 break;
 //                                timeAdded = currentTime; // Reset time after handling timeouts
@@ -171,24 +175,30 @@ public class ServerSender implements Runnable{
 //                            }
 //                        }
 
-                        while (queueNumberServerbound < packetSender.queueNumberServerboundLast && !packetSender.serverboundPacketQueue.containsKey(queueNumberServerbound)) {
-                            System.out.println("Stuck");
+//                        while (queueNumberServerbound < packetSender.queueNumberServerboundLast && !packetSender.serverboundPacketQueue.containsKey(queueNumberServerbound)) {
+//                            System.out.println("Stuck");
 //                        System.out.println("Stuck in loop: User: " + clientInstances_PacketSenders.get(this.packetSender).getUsername() + " queueNumberClientbound: " + queueNumberClientbound + " queueNumberClientboundLast: " + queueNumberClientboundLast);
                             queueNumberServerbound++;
-//                            timeAdded = currentTime;
-                        }
+                            dosleep = false;
+
+                            timeAdded = currentTime;
+//                        }
 //                    if (!packetSender.clientboundPacketQueue.containsKey(queueNumberClientbound)) {
 //                        queueNumberClientbound++;
 //                        break;
 //                    }
 //                        System.out.println("tewst");
 //                    Thread.sleep(1000);
-                        break;
+//                        break;
 
                     }
 
                 } catch (Exception e) {
                     System.out.println("Error in main loop: " + e.getMessage());
+                }
+
+                if (dosleep) {
+                    Thread.sleep(1);
                 }
             }
         } catch (Exception e) {

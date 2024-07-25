@@ -41,6 +41,8 @@ public class VastConnection {
     private ClientConnectedInstance clientInstance;
 
     private int connectionID;
+    public Instant lastReceivedPacket;
+
 
     public VastConnection(String VAST_COM_IP, int VAST_COM_PORT, ClientConnectedInstance clientInstance) {
         this.VAST_COM_IP = VAST_COM_IP;
@@ -146,6 +148,10 @@ public class VastConnection {
         socket.on("publication", new Emitter.Listener() {
             @Override
             public void call(Object... data) { // receive publication from vast matcher as a client
+
+                // Keep track of last received packet time
+                lastReceivedPacket = Instant.now();
+
 //                tempcounter_deleteme += 1;
 //				ConsoleIO.println("Received a publication from vastnet and attempting to send to Minecraft player!");
 //                VastConnection.printQueueNumbers();
@@ -181,7 +187,7 @@ public class VastConnection {
                                     if (pingpong.getPingOriginServerID().equals(PINGPONG.serverUUID)) {
                                         Duration duration = Duration.between(pingpong.getInitTime(), Instant.now());
                                         System.out.println("Complete round trip duration: " + duration.toMillis() + "ms");
-                                        PacketCapture.log("PONG_" + unique_id, PacketCapture.LogCategory.CLIENTBOUND_PONG_IN);
+                                        PacketCapture.log(clientInstance.getUsername(),"PONG_" + unique_id, PacketCapture.LogCategory.CLIENTBOUND_PONG_IN);
                                     }
     //                                System.out.println("Received PONG from VAST_COM");
     //                                PacketCapture.log("PONG_" + unique_id, PacketCapture.LogCategory.PONG_IN);
@@ -190,9 +196,11 @@ public class VastConnection {
                                 }
                             }
                     }
-                    return;
+//                    return;
                 }
                 ////////////////////////////////////////////////
+
+                // If unique id in packetWrapperMap, then it is a duplicate packet
 
                 PacketWrapper packetWrapper = new PacketWrapper(packet.packet);
                 packetWrapper.unique_id = unique_id;
@@ -201,9 +209,19 @@ public class VastConnection {
 //                    System.out.println("CHUNK! received from VAST");
 //                }
 
-                if (packetWrapperMap.containsKey(packet.packet)) {
-                System.out.println("Packet already exists in packetWrapperMap, i.e. duplicate packet");
-                }
+//                if (packetWrapperMap.containsKey(packet.packet)) {
+//                    System.out.println("Packet already exists in packetWrapperMap, i.e. duplicate packet");
+//
+//                    clientInstance.startPermanentSubscriptions(true);
+//                    return;
+//                }
+
+//                if (PacketWrapper.getPacketWrapper(unique_id)) {
+//                    System.out.println("Packet already exists in packetWrapperMap, i.e. duplicate packet");
+//                    clientInstance.startPermanentSubscriptions(true);
+//                    return;
+//                }
+
 //                System.out.println("receive");
 
                 packetWrapperMap.put(packet.packet, packetWrapper);
@@ -211,17 +229,14 @@ public class VastConnection {
 //                System.out.println(clientInstance.getUsername() + " received publication from vast matcher: <" + packet.packet.getClass().getSimpleName() + "> username: <" + username + "> channel: <" + packet.channel + ">");
 
                 if (packet.channel.equals(clientInstance.getUsername())) { // Player Specific Packets
-
-
-
                     PacketWrapper.setPlayerSpecific(packet.packet, clientInstance.getUsername());
                     clientInstance.getPacketSender().addClientboundPacket(packet.packet);
-                    PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
+                    PacketCapture.log(clientInstance.getUsername(),packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
 //                    System.out.println("set player specific for packet <" + packet.packet.getClass().getSimpleName() + "> for username: <" + username + "> and channel: <" + packet.channel + ">");
                 } else if (packet.channel.equals("clientBound") && !Objects.equals(packet.packet.getClass().getSimpleName(), "ServerKeepAlivePacket")) {
                      if (clientInstance != null) {
                          clientInstance.getPacketSender().addClientboundPacket(packet.packet);
-                         PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
+                         PacketCapture.log(clientInstance.getUsername(),packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.CLIENTBOUND_IN);
                      } else {
                          System.out.println("ERROR: ClientInstance is null");
                      }
@@ -289,6 +304,8 @@ public class VastConnection {
     //Variable to save time of previous ping
     private Instant lastPing = Instant.now();
 
+    private static int pingCounter = 0;
+
     public void publish(SPSPacket packet) { // sends to vast matcher as client
 
 //        System.out.println("Connection <"+uuid+"> sent packet <"+packet.packet.getClass().getSimpleName()+"> on channel <"+packet.channel+"> at x: <"+packet.x+"> y: <"+packet.y+"> radius: <"+packet.radius+">");
@@ -296,7 +313,12 @@ public class VastConnection {
         //convert to JSON
         Gson gson = new Gson();
         byte[] payload = packetToBytes(packet.packet);
-        String json = gson.toJson(payload);
+        String json = gson.toJson(payload); // TODO: this is extremely inefficient, should be changed
+
+        // Print memory size of json
+
+
+
         //ConsoleIO.println("Connection <"+connectionID+"> sent packet <"+packet.packet.getClass().getSimpleName()+"> on channel <"+packet.channel+">");
 
         if (packet.packet.getClass().getSimpleName().equals("EstablishConnectionPacket")) {
@@ -304,30 +326,44 @@ public class VastConnection {
         }
 
         // If 2 seconds past since last ping, ping again
-        if (Duration.between(lastPing, Instant.now()).compareTo(Duration.ofSeconds(1)) >= 0) {
-            // Code to send another ping
-//            SPSPacket pingPacket = new SPSPacket(ping, "serverBound", this.clientInstance.getXPosition(), this.clientInstance.getYPosition(), 0,
-//                    this.clientInstance.getUsername() + "&" + UUID.randomUUID().toString() + "&MATCHERPING");
-            PacketCapture.log("PING_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.SERVERBOUND_PING_OUT);
+        if ((Duration.between(lastPing, Instant.now()).compareTo(Duration.ofSeconds(1)) >= 0) && (clientInstance.isJoined()) && (!clientInstance.isMigrating())) {
+
+            // Create serverbound packet
             PINGPONG ping = new PINGPONG(PINGPONG.Direction.SERVERBOUND, PINGPONG.Origin.ClientProxy, PINGPONG.Type.PING);
+
+
+            String unique_id = "SBP" + pingCounter++ + config.getLogHostName();
+            clientInstance.getPacketSender().addServerboundPacket(ping, unique_id);
+            // Create unique id for the ping
+            PacketCapture.log(clientInstance.getUsername(),
+                    "PING_" + unique_id
+                    , PacketCapture.LogCategory.SERVERBOUND_PING_OUT);
+
+            lastPing = Instant.now();
+            ///////////////////
+        }
+        if (packet.packet instanceof PINGPONG) {
             socket.emit("publish", connectionID,
                     this.clientInstance.getUsername() + "&" + PacketWrapper.get_unique_id(packet.packet) + "&MATCHERPING",
                     this.clientInstance.getXPosition(),
                     this.clientInstance.getYPosition(),
                     0,
-                    gson.toJson(packetToBytes(ping)), "serverBound");
-            lastPing = Instant.now(); // Update the lastPing time
+                    payload, "serverBound");
+            PacketCapture.log(clientInstance.getUsername(),
+                    packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet),
+                    PacketCapture.LogCategory.SERVERBOUND_OUT);
+            return;
         }
 
 //        temp_pubcounter += 1;
 //        Logger.log(this, Logger.Level.DEBUG, new String[]{"counter", "clientPub"},"Amount of packets sent: " + temp_pubcounter + ": " + packet.packet.getClass().getSimpleName());
-        PacketCapture.log(packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.SERVERBOUND_OUT);
-//        socket.emit("publish", connectionID, packet.username, 100, 100, 10000, json, packet.channel); // TODO: AOI - This should not be hard coded, this is also wack
+        PacketCapture.log(clientInstance.getUsername(),packet.packet.getClass().getSimpleName() + "_" + PacketWrapper.get_unique_id(packet.packet), PacketCapture.LogCategory.SERVERBOUND_OUT);
+//        socket.emit("publish", connectionID, packet.username, 100, 100, 10000, payload, packet.channel); // TODO: AOI - This should not be hard coded, this is also wack
 
         if (packet.x == 0 && packet.y == 0) {
-            socket.emit("publish", connectionID, packet.username, this.clientInstance.getXPosition(), this.clientInstance.getYPosition(), 10, json, packet.channel); // Radius is 10, to ensure migration TODO: test
+            socket.emit("publish", connectionID, packet.username, this.clientInstance.getXPosition(), this.clientInstance.getYPosition(), 10, payload, packet.channel); // Radius is 10, to ensure migration TODO: test
         } else {
-            socket.emit("publish", connectionID, packet.username, packet.x, packet.y, packet.radius, json, packet.channel);
+            socket.emit("publish", connectionID, packet.username, packet.x, packet.y, packet.radius, payload, packet.channel);
         }
     }
 
