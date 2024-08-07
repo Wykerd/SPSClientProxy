@@ -84,7 +84,7 @@ public class App
 //                clientInstances.add(new ClientConnectedInstance(session, vastHost, vastPort));\
                 if (vastPort != 0) {
                     // Create a new vast_com instance with ../vast_com "port"
-                    String command = "./vast_com";
+                    String command = "vast_com";
                     vastPort = vastPort + count;
                     String argument = Integer.toString(vastPort);
                     count = count + 1;
