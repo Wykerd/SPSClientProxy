@@ -21,7 +21,9 @@ public class ServerJoinGamePacketBehaviour implements Behaviour<Packet> {
 	private ClientConnectedInstance clientInstance;
 //	private IServerSession serverSession;
 //	private static Packet joinpacket = null;
-	
+
+	private static long lastPacketTime = 1000;
+
 	@SuppressWarnings("unused")
 	private ServerJoinGamePacketBehaviour() {}
 	
@@ -37,6 +39,16 @@ public class ServerJoinGamePacketBehaviour implements Behaviour<Packet> {
 
 	@Override
 	public void process(Packet packet) {
+
+		long time = System.currentTimeMillis();
+
+		if (time - lastPacketTime < 100) { // Check if the last packet was sent less than 100ms ago, if so, ignore this packet
+			// This happens when the client is migrating to a new server and because the client has two username subscriptions
+			clientInstance.getPacketSender().removePacket(packet);
+			return;
+		}
+		lastPacketTime = time;
+
 
 		if (clientInstance.isMigrating()){
 //			username, boolean establishConnection, String ip, int port
@@ -66,7 +78,7 @@ public class ServerJoinGamePacketBehaviour implements Behaviour<Packet> {
 			clientInstance.setMigratingMinecraftServer(null, 0);
 //			clientInstance.setMigarting(false); //migrated
 
-			System.out.println("ServerJoinGamePacketBehaviour::process => Migrated to server");
+			System.out.println("ServerJoinGamePacketBehaviour::process => Migrated to server: " + clientInstance.getMinecraftServerHost() + " port " + clientInstance.getMinecraftServerPort());
 
 			ServerJoinGamePacket serverJoinPacket = (ServerJoinGamePacket) packet;
 			clientInstance.setEntityID(serverJoinPacket.getEntityId());

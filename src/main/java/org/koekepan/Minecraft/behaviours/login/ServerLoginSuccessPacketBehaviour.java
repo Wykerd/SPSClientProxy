@@ -14,6 +14,8 @@ public class ServerLoginSuccessPacketBehaviour implements Behaviour<Packet> {
 	private ClientConnectedInstance clientInstance;
 	private static Packet loginPacket;
 
+	public static long lastPacketTime = 0;
+
 	@SuppressWarnings("unused")
 	private ServerLoginSuccessPacketBehaviour() {}
 	
@@ -29,16 +31,18 @@ public class ServerLoginSuccessPacketBehaviour implements Behaviour<Packet> {
 	@Override
 	public void process(Packet packet) {
 
-		// Send immediately to client
+		long time = System.currentTimeMillis();
+
 		System.out.println("ServerLoginSuccessPacketBehaviour::process => Processing ServerLoginSuccessPacket");
 
+		if (time - lastPacketTime < 100) {
+			return;
+		}
 
-//		PacketWrapper.setProcessed(packet, true);
+		lastPacketTime = time;
 
-//		loginPacket = packet; // Removed because this is set for each client connecting to server
+
 		LoginSuccessPacket loginSuccessPacket = (LoginSuccessPacket)packet;
-
-
 //		clientInstance.getSession().send(loginSuccessPacket);
 		clientInstance.getPacketSender().removePacket(packet);
 
